@@ -71,9 +71,18 @@ namespace ns3 {
             throw std::runtime_error("Arbiter has not been set");
         }
 
-        // Multi-cast not supported
+        // Multi-cast not supported 224.0.0.0/24
         if (dest.IsLocalMulticast()) {
-            throw std::runtime_error("Multi-cast is not supported");
+            // throw std::runtime_error("Multi-cast is not supported");
+
+            Ptr<Ipv4Route> rtentry = 0;
+            NS_ASSERT_MSG (oif, "Try to send on link-local multicast address, and no interface index is given!");
+            rtentry = Create<Ipv4Route> ();
+            rtentry->SetDestination (dest);
+            rtentry->SetGateway (Ipv4Address::GetZero ());
+            rtentry->SetOutputDevice (oif);
+            rtentry->SetSource (m_ipv4->GetAddress (m_ipv4->GetInterfaceForDevice (oif), 0).GetLocal ());
+            return rtentry;
         }
 
         // No support for requested output interfaces
@@ -114,6 +123,11 @@ namespace ns3 {
 
     }
 
+    Ptr<Ipv4MulticastRoute>
+    Ipv4ArbiterRouting::LookupArbiter () {
+        return NULL;
+    }
+
     /**
      * Get an output route.
      *
@@ -143,7 +157,8 @@ namespace ns3 {
 
         // Multi-cast to multiple interfaces is not supported
         if (destination.IsMulticast()) {
-            throw std::runtime_error("Multi-cast not supported");
+            // throw std::runtime_error("Multi-cast not supported");
+            NS_LOG_LOGIC ("ByLul-Arbiter::RouteOutput()::Multicast destination");
         }
 
         // Perform lookup
@@ -172,7 +187,21 @@ namespace ns3 {
 
         // Multi-cast
         if (ipHeader.GetDestination().IsMulticast()) {
-            throw std::runtime_error("Multi-cast not supported.");
+            // throw std::runtime_error("Multi-cast not supported.");
+            NS_LOG_LOGIC ("ByLul-Multicast destination");
+            Ptr<Ipv4MulticastRoute> mrtentry = LookupArbiter(); //TODO
+            // Ptr<Ipv4MulticastRoute> mrtentry =  LookupStatic (ipHeader.GetSource (),
+            //                                                     ipHeader.GetDestination (), m_ipv4->GetInterfaceForDevice (idev));
+
+            if (mrtentry){
+                NS_LOG_LOGIC ("ByLul-Multicast route found");
+                mcb (mrtentry, p, ipHeader); // multicast forwarding callback
+                return true;
+            }
+            else{
+                NS_LOG_LOGIC ("ByLul-Multicast route not found");
+                return false; // Let other routing protocols try to handle this
+            }
         }
 
         // Local delivery
