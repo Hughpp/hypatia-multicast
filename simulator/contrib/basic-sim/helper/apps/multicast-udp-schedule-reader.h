@@ -40,6 +40,8 @@ namespace ns3 {
         int64_t GetDurationNs();
         std::string GetAdditionalParameters();
         std::string GetMetadata();
+        Ipv4Address GetMulticastGroup();
+        void SetMulticastGroup(Ipv4Address multicast_group);
     private:
         int64_t m_udp_burst_id;
         int64_t m_from_node_id;
@@ -50,9 +52,10 @@ namespace ns3 {
         int64_t m_duration_ns;
         std::string m_additional_parameters;
         std::string m_metadata;
+        Ipv4Address m_multicast_group;
     };
 
-    std::vector<MulticastUdpInfo> read_udp_burst_schedule(
+    std::vector<MulticastUdpInfo> read_multicast_udp_schedule(
         const std::string& filename,
         Ptr<Topology> topology,
         const int64_t simulation_end_time_ns

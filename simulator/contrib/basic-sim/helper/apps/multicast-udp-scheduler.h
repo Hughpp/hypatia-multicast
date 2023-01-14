@@ -49,8 +49,8 @@
 // #include "ns3/udp-burst-schedule-reader.h"
 // #include "ns3/udp-burst-helper.h"
 // #include "ns3/udp-burst-info.h"
-// #include "ns3/multicast-udp-schedule-reader.h"
-// #include "ns3/multicast-udp-helper.h"
+#include "ns3/multicast-udp-schedule-reader.h"
+#include "ns3/multicast-udp-helper.h"
 
 namespace ns3 {
 
@@ -71,21 +71,21 @@ namespace ns3 {
         bool m_enable_distributed;
         std::vector<int64_t> m_distributed_node_system_id_assignment;
 
-        // std::vector<UdpBurstInfo> m_schedule;
+        std::vector<MulticastUdpInfo> m_schedule;
         NodeContainer m_nodes;
         std::vector<ApplicationContainer> m_apps;
-        std::set<int64_t> m_enable_logging_for_udp_burst_ids;
+        std::set<int64_t> m_enable_logging_for_multicast_udp_ids;
 
-        std::string m_udp_bursts_outgoing_csv_filename;
-        std::string m_udp_bursts_outgoing_txt_filename;
-        std::string m_udp_bursts_incoming_csv_filename;
-        std::string m_udp_bursts_incoming_txt_filename;
+        std::string m_multicast_udp_outgoing_csv_filename;
+        std::string m_multicast_udp_outgoing_txt_filename;
+        std::string m_multicast_udp_incoming_csv_filename;
+        std::string m_multicast_udp_incoming_txt_filename;
 
-        // std::vector<std::pair<UdpBurstInfo, Ptr<UdpBurstApplication>>> m_responsible_for_outgoing_bursts;
-        // std::vector<std::pair<UdpBurstInfo, Ptr<UdpBurstApplication>>> m_responsible_for_incoming_bursts;
+        std::vector<std::pair<MulticastUdpInfo, Ptr<MulticastUdpApplication>>> m_responsible_for_outgoing_multicasts;
+        std::vector<std::pair<MulticastUdpInfo, Ptr<MulticastUdpApplication>>> m_responsible_for_incoming_multicasts;
 
     };
 
 }
 
-#endif /* UDP_BURST_SCHEDULER_H */
+#endif /* MULTICAST_UDP_SCHEDULER_H */
