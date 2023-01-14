@@ -31,6 +31,7 @@ def build(bld):
         'model/apps/tcp-flow-sink.cc',
         'model/apps/udp-rtt-client.cc',
         'model/apps/udp-burst-application.cc',
+        'model/apps/multicast-udp-application.cc',
         'model/apps/udp-rtt-server.cc',
         'model/apps/udp-burst-info.cc',
         'model/apps/id-seq-header.cc',
@@ -43,6 +44,9 @@ def build(bld):
         'helper/apps/udp-burst-helper.cc',
         'helper/apps/udp-burst-schedule-reader.cc',
         'helper/apps/udp-burst-scheduler.cc',
+        'helper/apps/multicast-udp-scheduler.cc',
+        'helper/apps/multicast-udp-schedule-reader.cc',
+        'helper/apps/multicast-udp-helper.cc',
         'helper/apps/pingmesh-scheduler.cc',
         ]
 
@@ -75,6 +79,7 @@ def build(bld):
         'model/apps/tcp-flow-sink.h',
         'model/apps/udp-rtt-client.h',
         'model/apps/udp-burst-application.h',
+        'model/apps/multicast-udp-application.h',
         'model/apps/udp-rtt-server.h',
         'model/apps/udp-burst-info.h',
         'model/apps/id-seq-header.h',
@@ -87,6 +92,9 @@ def build(bld):
         'helper/apps/udp-burst-helper.h',
         'helper/apps/udp-burst-schedule-reader.h',
         'helper/apps/udp-burst-scheduler.h',
+        'helper/apps/multicast-udp-scheduler.h',
+        'helper/apps/multicast-udp-schedule-reader.h',
+        'helper/apps/multicast-udp-helper.h',
         'helper/apps/pingmesh-scheduler.h',
 
         ]

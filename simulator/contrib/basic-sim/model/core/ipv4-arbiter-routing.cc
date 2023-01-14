@@ -74,7 +74,7 @@ namespace ns3 {
         // Multi-cast not supported 224.0.0.0/24
         if (dest.IsLocalMulticast()) {
             // throw std::runtime_error("Multi-cast is not supported");
-
+            // link local is only for local network segment comm
             Ptr<Ipv4Route> rtentry = 0;
             NS_ASSERT_MSG (oif, "Try to send on link-local multicast address, and no interface index is given!");
             rtentry = Create<Ipv4Route> ();
@@ -155,12 +155,13 @@ namespace ns3 {
         NS_LOG_FUNCTION(this << p << header << oif << sockerr);
         Ipv4Address destination = header.GetDestination();
 
+        // std::cout << "  > ByLul:route output " << destination << std::endl;
+
         // Multi-cast to multiple interfaces is not supported
         if (destination.IsMulticast()) {
             // throw std::runtime_error("Multi-cast not supported");
             NS_LOG_LOGIC ("ByLul-Arbiter::RouteOutput()::Multicast destination");
         }
-
         // Perform lookup
         // Info: If no route is found for a packet with the header with source IP = 102.102.102.102,
         //       the TCP socket will conclude there is no route and not even send out SYNs (any real packet).
