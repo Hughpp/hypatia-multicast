@@ -37,7 +37,7 @@ ArbiterPtop::ArbiterPtop(
 
 }
 
-std::vector<uint32_t> ArbiterPtop::GetNbrIdToIfIdx() {
+std::vector<uint32_t>& ArbiterPtop::GetNbrIdToIfIdx() {
     return m_neighbor_node_id_to_if_idx;
 }
 

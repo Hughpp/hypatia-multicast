@@ -22,7 +22,7 @@
 #include "multicast-udp-scheduler.h"
 
 namespace ns3 {
-    std::vector<MulticastUdpInfo> MulticastUdpScheduler::GetMulticastReqs() {
+    std::vector<MulticastUdpInfo>& MulticastUdpScheduler::GetMulticastReqs() {
         return m_schedule;
     }
 

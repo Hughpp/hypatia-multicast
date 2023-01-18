@@ -56,7 +56,7 @@ namespace ns3 {
 
     public:
         MulticastUdpScheduler(Ptr<BasicSimulation> basicSimulation, Ptr<Topology> topology);
-        std::vector<MulticastUdpInfo> GetMulticastReqs();
+        std::vector<MulticastUdpInfo>& GetMulticastReqs();
         void WriteResults();
 
     protected:
