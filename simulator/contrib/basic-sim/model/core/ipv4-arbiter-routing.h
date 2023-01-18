@@ -103,7 +103,7 @@ public:
 private:
     Ptr<Ipv4> m_ipv4;
     Ptr<Ipv4Route> LookupArbiter (const Ipv4Address& dest, const Ipv4Header &header, Ptr<const Packet> p, Ptr<NetDevice> oif = 0);
-    Ptr<Ipv4MulticastRoute> LookupArbiter ();
+    Ptr<Ipv4MulticastRoute> LookupArbiter (Ipv4Address dest, Ipv4Address src, const Ipv4Header &header, Ptr<const Packet> p, uint32_t input_if_idx);
     Ptr<Arbiter> m_arbiter = 0;
     Ipv4Address m_nodeSingleIpAddress;
     Ipv4Mask loopbackMask = Ipv4Mask("255.0.0.0");

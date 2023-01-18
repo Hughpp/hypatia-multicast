@@ -127,9 +127,11 @@ namespace ns3 {
             TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
             m_socket = Socket::CreateSocket(GetNode(), tid);
             InetSocketAddress local = InetSocketAddress(Ipv4Address::GetAny(), m_port);
+            // std::cout << " -------------bind port " << m_port << std::endl;
             if (m_socket->Bind(local) == -1) {
                 NS_FATAL_ERROR("Failed to bind socket");
             }
+            std::cout << "    > Multicast app start at Node " << GetNode()->GetId() << std::endl;
         }
 
         // Receive of packets
@@ -228,7 +230,7 @@ namespace ns3 {
         Ptr <Packet> packet;
         Address from;
         while ((packet = socket->RecvFrom(from))) {
-
+            std::cout << "    Recv   Multicast App: recv a pkt at node " << m_node->GetId() << " from " << from << std::endl;
             // Extract burst identifier and packet sequence number
             IdSeqHeader incomingIdSeq;
             packet->RemoveHeader (incomingIdSeq);

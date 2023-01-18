@@ -37,6 +37,8 @@ public:
             bool is_socket_request_for_source_ip
     );
 
+    std::vector<uint32_t> GetNbrIdToIfIdx();
+
     /**
      * From among the neighbors, decide where the packet needs to be routed to.
      *

@@ -13,7 +13,8 @@ namespace ns3 {
     {
     public:
         static void InstallArbiters (Ptr<BasicSimulation> basicSimulation, Ptr<TopologyPtop> topology);
-    private:
+    // private:
+    protected:
         static std::vector<std::vector<std::vector<uint32_t>>> CalculateGlobalState(Ptr<TopologyPtop> topology);
     };
 

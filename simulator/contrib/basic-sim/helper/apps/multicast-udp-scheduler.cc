@@ -22,6 +22,9 @@
 #include "multicast-udp-scheduler.h"
 
 namespace ns3 {
+    std::vector<MulticastUdpInfo> MulticastUdpScheduler::GetMulticastReqs() {
+        return m_schedule;
+    }
 
     MulticastUdpScheduler::MulticastUdpScheduler(Ptr<BasicSimulation> basicSimulation, Ptr<Topology> topology) {
         printf("MULTICAST UDP SCHEDULER\n");
@@ -91,7 +94,7 @@ namespace ns3 {
                 if (!m_enable_distributed || m_distributed_node_system_id_assignment[endpoint] == m_system_id) {
 
                     // Setup the application
-                    MulticastUdpHelper multicastUdpHelper(1026, m_basicSimulation->GetLogsDir());
+                    MulticastUdpHelper multicastUdpHelper(3026, m_basicSimulation->GetLogsDir());
                     ApplicationContainer app = multicastUdpHelper.Install(m_nodes.Get(endpoint));
                     app.Start(Seconds(0.0));
                     m_apps.push_back(app);
@@ -101,15 +104,17 @@ namespace ns3 {
                     for (MulticastUdpInfo entry : m_schedule) {
                         std::set<int64_t> to_node_ids = entry.GetToNodeIds();
                         if (entry.GetFromNodeId() == endpoint) {
+                            std::cout << "    >>> Register multicast outgoing at " << endpoint << std::endl;
                             multicastUdpApp->RegisterOutgoingBurst(
                                     entry,
                                     // InetSocketAddress(m_nodes.Get(entry.GetToNodeId())->GetObject<Ipv4>()->GetAddress(1,0).GetLocal(), 1026),
-                                    InetSocketAddress(entry.GetMulticastGroup(), 1026),
+                                    InetSocketAddress(entry.GetMulticastGroup(), 3026),
                                     m_enable_logging_for_multicast_udp_ids.find(entry.GetUdpBurstId()) != m_enable_logging_for_multicast_udp_ids.end()
                             );
                             m_responsible_for_outgoing_multicasts.push_back(std::make_pair(entry, multicastUdpApp));
                         }
                         if (to_node_ids.find(endpoint) != to_node_ids.end()) {
+                            std::cout << "    >>> Register multicast incoming at " << endpoint << std::endl;
                             multicastUdpApp->RegisterIncomingBurst(
                                     entry,
                                     m_enable_logging_for_multicast_udp_ids.find(entry.GetUdpBurstId()) != m_enable_logging_for_multicast_udp_ids.end()
@@ -176,7 +181,7 @@ namespace ns3 {
             std::sort(m_responsible_for_incoming_multicasts.begin(), m_responsible_for_incoming_multicasts.end(), ascending_paired_udp_burst_id_key());
 
             // Outgoing bursts
-            std::cout << "  > Writing outgoing log files" << std::endl;
+            std::cout << "  > Writing Multicast outgoing log files" << std::endl;
             for (std::pair<MulticastUdpInfo, Ptr<MulticastUdpApplication>> p : m_responsible_for_outgoing_multicasts) {
                 MulticastUdpInfo info = p.first;
                 Ptr<MulticastUdpApplication> udpBurstAppOutgoing = p.second;
@@ -233,7 +238,7 @@ namespace ns3 {
             }
 
             // Incoming bursts
-            std::cout << "  > Writing incoming log files" << std::endl;
+            std::cout << "  > Writing Multicast incoming log files" << std::endl;
             for (std::pair<MulticastUdpInfo, Ptr<MulticastUdpApplication>> p : m_responsible_for_incoming_multicasts) {
                 MulticastUdpInfo info = p.first;
                 Ptr<MulticastUdpApplication> udpBurstAppIncoming = p.second;

@@ -1,4 +1,4 @@
-#include "ns3/arbiter.h"
+#include "arbiter.h"
 
 namespace ns3 {
 
@@ -19,6 +19,39 @@ uint32_t ArbiterResult::GetOutIfIdx() {
         throw std::runtime_error("Cannot retrieve out interface index if the arbiter did not succeed in finding a next hop");
     }
     return m_out_if_idx;
+}
+
+bool ArbiterResult::IsMulticast() {
+    return m_is_multicast;
+}
+
+bool ArbiterResult::IsMulticastOutbound() {
+    return m_is_multicast_outbound;
+}
+
+std::vector<uint32_t> ArbiterResult::GetOutIfIdxMulticast() {
+    if (m_is_multicast) {
+        return m_out_if_idxs;
+    }
+    else {
+        throw std::runtime_error("Cannot retrieve out interface indexs if the arbiter did not succeed in finding a multicast route");
+    }
+}
+
+void ArbiterResult::SetIsMulticast(bool is_multicast) {
+    m_is_multicast = is_multicast;
+}
+
+void ArbiterResult::SetIsMulticastOutbound(bool is_multicast_outbound) {
+    m_is_multicast_outbound = is_multicast_outbound;
+}
+
+void ArbiterResult::SetOutIfIdxs(std::vector<uint32_t> out_if_idxs) {
+    m_out_if_idxs = out_if_idxs;
+}
+
+void ArbiterResult::SetOutIfIdx(uint32_t out_if_idx) {
+    m_out_if_idx = out_if_idx;
 }
 
 uint32_t ArbiterResult::GetGatewayIpAddress() {
@@ -64,8 +97,12 @@ uint32_t Arbiter::ResolveNodeIdFromIp(uint32_t ip) {
     }
 }
 
-ArbiterResult Arbiter::BaseDecide(Ptr<const Packet> pkt, Ipv4Header const &ipHeader) {
+ArbiterResult Arbiter::DecideMulticast(int32_t source_node_id, Ptr<const Packet> pkt, Ipv4Header const &ipHeader) {
+    throw std::runtime_error("Multicast not supported in this arbiter");
+}
 
+ArbiterResult Arbiter::BaseDecide(Ptr<const Packet> pkt, Ipv4Header const &ipHeader) {
+    //handle src
     // Retrieve the source node id
     uint32_t source_ip = ipHeader.GetSource().Get();
     uint32_t source_node_id;
@@ -80,7 +117,14 @@ ArbiterResult Arbiter::BaseDecide(Ptr<const Packet> pkt, Ipv4Header const &ipHea
     } else {
         source_node_id = ResolveNodeIdFromIp(source_ip);
     }
-    uint32_t target_node_id = ResolveNodeIdFromIp(ipHeader.GetDestination().Get());
+
+    //handle dst
+    Ipv4Address dest_addr = ipHeader.GetDestination();
+    if(dest_addr.IsMulticast()) {
+        //multicast routing: outbound and forward
+        return DecideMulticast(source_node_id, pkt, ipHeader);
+    }
+    uint32_t target_node_id = ResolveNodeIdFromIp(dest_addr.Get());
 
     // Decide the next node
     return Decide(

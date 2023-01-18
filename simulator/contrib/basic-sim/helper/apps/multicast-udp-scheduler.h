@@ -46,9 +46,6 @@
 #include "ns3/exp-util.h"
 #include "ns3/topology.h"
 
-// #include "ns3/udp-burst-schedule-reader.h"
-// #include "ns3/udp-burst-helper.h"
-// #include "ns3/udp-burst-info.h"
 #include "ns3/multicast-udp-schedule-reader.h"
 #include "ns3/multicast-udp-helper.h"
 
@@ -59,6 +56,7 @@ namespace ns3 {
 
     public:
         MulticastUdpScheduler(Ptr<BasicSimulation> basicSimulation, Ptr<Topology> topology);
+        std::vector<MulticastUdpInfo> GetMulticastReqs();
         void WriteResults();
 
     protected:

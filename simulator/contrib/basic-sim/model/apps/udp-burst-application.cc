@@ -217,8 +217,9 @@ namespace ns3 {
         NS_LOG_FUNCTION(this << socket);
         Ptr <Packet> packet;
         Address from;
+        // std::cout << "*********************UDP Receive callback node " << m_node->GetId() << std::endl;
         while ((packet = socket->RecvFrom(from))) {
-
+            // std::cout << "*********************UDP Get a pkt node " << m_node->GetId() << " " << from << std::endl;
             // Extract burst identifier and packet sequence number
             IdSeqHeader incomingIdSeq;
             packet->RemoveHeader (incomingIdSeq);

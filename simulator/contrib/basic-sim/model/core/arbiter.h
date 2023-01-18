@@ -29,12 +29,22 @@ public:
     bool Failed();
     uint32_t GetOutIfIdx();
     uint32_t GetGatewayIpAddress();
+    //multicast
+    bool IsMulticast();
+    bool IsMulticastOutbound();
+    void SetIsMulticast(bool is_multicast);
+    void SetIsMulticastOutbound(bool is_multicast_outbound);
+    void SetOutIfIdx(uint32_t out_if_idx);
+    void SetOutIfIdxs(std::vector<uint32_t> out_if_idxs);
+    std::vector<uint32_t> GetOutIfIdxMulticast();
 
 private:
     bool m_failed;
+    bool m_is_multicast = false; //default unicast
+    bool m_is_multicast_outbound = false; //if true, only used m_out_if_idx(unicast)
     uint32_t m_out_if_idx;
     uint32_t m_gateway_ip_address;
-
+    std::vector<uint32_t> m_out_if_idxs; //used by multicast
 };
 
 class Arbiter : public Object
@@ -99,6 +109,9 @@ public:
             ns3::Ipv4Header const &ipHeader,
             bool is_socket_request_for_source_ip
     ) = 0;
+
+    //used by BaseDecide for multicast, but raise error by default because not implement
+    virtual ArbiterResult DecideMulticast(int32_t source_node_id, Ptr<const Packet> pkt, Ipv4Header const &ipHeader); //not pure for compatibility
 
     /**
      * Convert the forwarding state (i.e., routing table) to a string representation.

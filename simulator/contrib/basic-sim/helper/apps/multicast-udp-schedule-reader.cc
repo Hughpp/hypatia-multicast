@@ -73,7 +73,7 @@ namespace ns3 {
 
         // Schedule to put in the data
         std::vector<MulticastUdpInfo> schedule;
-        Ipv4Address multicast_group_base = Ipv4Address("225.1.2.4");
+        Ipv4Address multicast_group_base = topology->GetMulticastGroupBase();
 
         // Check that the file exists
         if (!file_exists(filename)) {
@@ -108,7 +108,7 @@ namespace ns3 {
                     int64_t cur_node_id = parse_positive_double(space_split[i]);
                     to_node_ids.insert(cur_node_id);
                 }
-                Ipv4Address multicast_group = Ipv4Address(multicast_group_base.Get()+line_counter);
+                Ipv4Address multicast_group = Ipv4Address(multicast_group_base.Get()+udp_burst_id);
                 //multicast change end
                 double target_rate_megabit_per_s = parse_positive_double(comma_split[4]);
                 int64_t start_time_ns = parse_positive_int64(comma_split[5]);
