@@ -43,7 +43,7 @@ granularity. It builds upon two ns-3 modules:
    bash build.sh --optimized
    ```
 
-## basic-sim multicast demo
+## basic-sim multicast
 
 After building successfully, enter directionary `simulator` and run `basic_main` as follows:
 
