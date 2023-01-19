@@ -45,14 +45,22 @@ granularity. It builds upon two ns-3 modules:
 
 ## basic-sim multicast demo
 
-After building successfully, enter directionary *simulator* and run basic_main as follows:
+After building successfully, enter directionary `simulator` and run `basic_main` as follows:
 
    ```
    cd simulator
    ./waf --run="basic_main --run_dir='../runsim/basic_multi'" 2>&1 | tee '../runsim/basic_multi/logs_ns3/console.txt'
    ```
 
-The result logs are saved at **/runsim/basic_multi/logs_ns3/**
+* `multicast_udp_burst.csv` format:
+  ```
+  [multicast req id],[src node id],[num of mem],[dest node ids(space split)],[target rate (Mbit/s)],[start time (ns since epoch)],[duration (ns)],[additional parameters],[metadata]
+  ```
+* `multicast_route.txt` format (static multicast routing is disabled by default, so this file is useless):
+  ```
+  [multicast_req_id],[node_id_to_install],[src_node_id],[src_nexthop_id],[input_nbr_id],[output_nbr_num],[output_nbr_ids(space split)]
+  ```  
+* The result logs are saved at **/runsim/basic_multi/logs_ns3/**
   
 ## satellite network multicast simulation
 
