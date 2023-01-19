@@ -30,7 +30,7 @@ granularity. It builds upon two ns-3 modules:
 
 ## Getting started
 
-1. Install dependencies:
+1. Install dependencies (inherited from `basic-sim` ns-3 module):
    ```
    sudo apt-get update
    sudo apt-get -y install openmpi-bin openmpi-common openmpi-doc libopenmpi-dev lcov gnuplot
