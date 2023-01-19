@@ -25,8 +25,9 @@ ArbiterMulticastHelper::ArbiterMulticastHelper(Ptr<BasicSimulation> basicSimulat
     }
     basicSimulation->RegisterTimestamp("Setup routing arbiter on each node");
 
-    std::cout << "  > Reading multicast route file and add route" << std::endl;
-    ReadGlobalMulticastState();
+    basicSimulation->RegisterTimestamp("Setup multicast routing state");
+    // ReadGlobalMulticastState();
+    CalGlobalMulticastState(global_ecmp_state);
 
     std::cout << std::endl;
 
@@ -56,6 +57,7 @@ void ArbiterMulticastHelper::testMulticast(Ptr<TopologyPtop> topology, Ptr<Arbit
 }
 
 void ArbiterMulticastHelper::ReadGlobalMulticastState() {
+    std::cout << "  > Reading multicast route file and add route" << std::endl;
     // Filename
     std::string filename = m_basicSimulation->GetRunDir() + "/" + m_basicSimulation->GetConfigParamOrFail("multicast_route_filename");
     //check exist
@@ -139,8 +141,52 @@ void ArbiterMulticastHelper::ReadGlobalMulticastState() {
     }    
 }
 
-std::vector<std::list<Ipv4MulticastRoutingTableEntry*>> ArbiterMulticastHelper::CalGlobalMulticastState(Ptr<TopologyPtop> topology) {
-    throw std::runtime_error("not implement");
+void ArbiterMulticastHelper::CalGlobalMulticastState(std::vector<std::vector<std::vector<uint32_t>>> &global_ecmp_state) {
+    m_basicSimulation->GetConfigParamOrFail("multicast_route_filename"); //lazily activate Config key 'multicast_route_filename'
+    std::cout << "  > Calculating multicast route from ecmp states" << std::endl;
+
+    for (MulticastUdpInfo req : m_multicast_reqs) {
+        //cal oifs for every req separately
+        std::set<uint32_t> nodes_ids_to_install;
+        std::map<uint32_t, std::set<uint32_t>> node_id_to_oifs;
+        std::map<uint32_t, uint32_t> node_id_to_iif;
+        int64_t src_id = req.GetFromNodeId();
+        std::set<int64_t> dst_ids = req.GetToNodeIds();
+        uint32_t cur_node_id, nxt_node_id, cur_to_nxt_oif_id=0;
+        for (auto dst_id : dst_ids) {
+            cur_node_id = src_id;
+            while (cur_node_id != (uint32_t)dst_id) {
+                nxt_node_id = global_ecmp_state[cur_node_id][dst_id][0]; //select the first ecmp candidate by default
+                cur_to_nxt_oif_id = m_node_to_nbr_if_idx[cur_node_id][nxt_node_id];
+                nodes_ids_to_install.insert(cur_node_id); // auto filter duplicate element
+                if (node_id_to_oifs.find(cur_node_id) != node_id_to_oifs.end()) { //cur_node_id has been recorded
+                    node_id_to_oifs[cur_node_id].insert(cur_to_nxt_oif_id); // add oif id to set
+                }
+                else {
+                    node_id_to_oifs.insert({cur_node_id, {cur_to_nxt_oif_id}}); // init a set
+                }
+                node_id_to_iif[nxt_node_id] = m_node_to_nbr_if_idx[nxt_node_id][cur_node_id];
+                cur_node_id = nxt_node_id; //hop to next
+            }
+        }
+        //add multicast route for this req
+        if (node_id_to_oifs[src_id].size() != 1) {
+            throw std::runtime_error("CalGlobalMulticastState: Src oif num != 1(not supported by ns3 routing protocol)");
+        }
+        Ipv4Address origin = m_nodes.Get(src_id)->GetObject<Ipv4>()->GetAddress(*node_id_to_oifs[src_id].begin(), 0).GetLocal();
+        Ipv4Address group = Ipv4Address(m_topology->GetMulticastGroupBase().Get() + req.GetUdpBurstId());
+        uint32_t iif_id;
+        for (auto node_id_to_install : nodes_ids_to_install) {
+            if (node_id_to_install == src_id) {
+                iif_id = 0;
+            }
+            else {
+                iif_id = node_id_to_iif[node_id_to_install]; // use 0 for simplicity
+            }
+            std::vector<uint32_t> out_if_ids(node_id_to_oifs[node_id_to_install].begin(), node_id_to_oifs[node_id_to_install].end());
+            m_arbiters[node_id_to_install]->AddMulticastRoute(origin, group, iif_id, out_if_ids);
+        }
+    }
 }
 
 } // namespace ns3

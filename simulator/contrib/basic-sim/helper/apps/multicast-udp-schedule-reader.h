@@ -33,7 +33,7 @@ namespace ns3 {
         );
         int64_t GetUdpBurstId() const;
         int64_t GetFromNodeId();
-        std::set<int64_t> GetToNodeIds();
+        std::set<int64_t>& GetToNodeIds();
         // int64_t GetToNodeId();
         double GetTargetRateMegabitPerSec();
         int64_t GetStartTimeNs();

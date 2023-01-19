@@ -230,7 +230,7 @@ namespace ns3 {
         Ptr <Packet> packet;
         Address from;
         while ((packet = socket->RecvFrom(from))) {
-            std::cout << "    Recv   Multicast App: recv a pkt at node " << m_node->GetId() << " from " << from << std::endl;
+            std::cout << "[App-Recv]Multicast App socket recv a pkt at node " << m_node->GetId() << " from " << from << std::endl;
             // Extract burst identifier and packet sequence number
             IdSeqHeader incomingIdSeq;
             packet->RemoveHeader (incomingIdSeq);

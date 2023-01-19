@@ -1,5 +1,8 @@
 # Low earth orbit satellite network simulation using ns-3
 
+**This program is developed based on snkas/hypatia**
+(https://github.com/snkas/hypatia)
+
 Hypatia makes use of ns-3 to simulate the satellite networks at packet-level
 granularity. It builds upon two ns-3 modules:
 
@@ -27,7 +30,7 @@ granularity. It builds upon two ns-3 modules:
 
 ## Getting started
 
-1. Install dependencies (inherited from `basic-sim` ns-3 module):
+1. Install dependencies:
    ```
    sudo apt-get update
    sudo apt-get -y install openmpi-bin openmpi-common openmpi-doc libopenmpi-dev lcov gnuplot
@@ -35,22 +38,22 @@ granularity. It builds upon two ns-3 modules:
    pip install git+https://github.com/snkas/exputilpy.git@v1.6
    ```
 
-2. Build optimized:
+2. Build ns3 (optimized):
    ```
    bash build.sh --optimized
    ```
 
 ## basic-sim multicast demo
 
-After build successfully, enter directionary *simulator* and run basic_main as follows:
+After building successfully, enter directionary *simulator* and run basic_main as follows:
 
    ```
    cd simulator
    ./waf --run="basic_main --run_dir='../runsim/basic_multi'" 2>&1 | tee '../runsim/basic_multi/logs_ns3/console.txt'
    ```
 
-The result logs are saved at */runsim/basic_multi/logs_ns3/*
+The result logs are saved at **/runsim/basic_multi/logs_ns3/**
   
 ## satellite network multicast simulation
 
-*Left as Future Work*
+*Future Work*
