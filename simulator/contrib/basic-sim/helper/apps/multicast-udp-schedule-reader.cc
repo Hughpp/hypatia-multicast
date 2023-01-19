@@ -30,7 +30,7 @@ namespace ns3 {
         return m_from_node_id;
     }
 
-    std::set<int64_t> MulticastUdpInfo::GetToNodeIds() {
+    std::set<int64_t>& MulticastUdpInfo::GetToNodeIds() {
         return m_to_node_ids;
     }
 

@@ -27,10 +27,11 @@ namespace ns3 {
         std::vector<Ptr<ArbiterMulticast>> m_arbiters;
         std::vector<std::vector<uint32_t>> m_node_to_nbr_if_idx;
 
-        // static std::vector<std::vector<std::vector<uint32_t>>> CalculateGlobalState(Ptr<TopologyPtop> topology);
         void testMulticast(Ptr<TopologyPtop> topology, Ptr<ArbiterMulticast> arbiterMulticast, uint32_t node_id);
+        //read multicast state from file
         void ReadGlobalMulticastState();
-        std::vector<std::list<Ipv4MulticastRoutingTableEntry*>> CalGlobalMulticastState(Ptr<TopologyPtop> topology);
+        //cal multicast state based on multicast_reqs and unicast state
+        void CalGlobalMulticastState(std::vector<std::vector<std::vector<uint32_t>>> &global_ecmp_state);
     };
 
 } // namespace ns3
