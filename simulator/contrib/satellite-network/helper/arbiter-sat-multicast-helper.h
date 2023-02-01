@@ -17,38 +17,44 @@
  * Author: Simon               2020
  */
 
-#ifndef ARBITER_SINGLE_FORWARD_HELPER
-#define ARBITER_SINGLE_FORWARD_HELPER
+#ifndef ARBITER_SAT_MULTICAST_HELPER
+#define ARBITER_SAT_MULTICAST_HELPER
 
 #include "ns3/ipv4-routing-helper.h"
+#include "ns3/arbiter-single-forward-helper.h"
 #include "ns3/basic-simulation.h"
 #include "ns3/topology-satellite-network.h"
 #include "ns3/ipv4-arbiter-routing.h"
 #include "ns3/arbiter-single-forward.h"
 #include "ns3/abort.h"
 
+#include "ns3/multicast-udp-schedule-reader.h"
+#include "ns3/arbiter-sat-multicast.h"
+
 namespace ns3 {
 
-    class ArbiterSingleForwardHelper
+    class ArbiterSatMulticastHelper
     {
     public:
-        ArbiterSingleForwardHelper();
-        ArbiterSingleForwardHelper(Ptr<BasicSimulation> basicSimulation, NodeContainer nodes);
-    // private:
-    protected:
-        // std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> InitialEmptyForwardingState();
+        ArbiterSatMulticastHelper(Ptr<BasicSimulation> basicSimulation, Ptr<TopologySatelliteNetwork> topology, const std::vector<MulticastUdpInfo> &multicast_reqs);
+    private:
+
+        void InitialEmptyMulticastState();
         void InitialEmptyForwardingState();
         void UpdateForwardingState(int64_t t);
+        void UpdateMulticastState(int64_t t);
+        void InitialGlobalRoutingState(); //including unicast and multicast
+        void UpdateGlobalRoutingState(int64_t t); //including unicast and multicast
 
-        // Parameters
         Ptr<BasicSimulation> m_basicSimulation;
         NodeContainer m_nodes;
         int64_t m_dynamicStateUpdateIntervalNs;
-        std::vector<Ptr<ArbiterSingleForward>> m_arbiters;
+        std::vector<Ptr<ArbiterSatMulticast>> m_arbiters;
         std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> m_globalForwardingState;
-
+        std::vector<MulticastUdpInfo> m_multicast_reqs;
+        Ptr<TopologySatelliteNetwork> m_topology;
     };
 
 } // namespace ns3
 
-#endif /* ARBITER_SINGLE_FORWARD_HELPER */
+#endif /* ARBITER_SAT_MULTICAST_HELPER */

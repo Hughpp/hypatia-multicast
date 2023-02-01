@@ -79,6 +79,7 @@ GSLChannel::TransmitStart (
     return TransmitTo(p, src, it->second, txTime, sameSystem);
   }
 
+  std::cout << "addr48=" << address48 << "    rawaddr=" << dst_address << std::endl;
   NS_ABORT_MSG("MAC address could not be mapped to a network device.");
   return false;
 }

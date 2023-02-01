@@ -44,13 +44,15 @@ public:
             std::vector<std::tuple<int32_t, int32_t, int32_t>> next_hop_list
     );
 
-    // void AddMulticastRoute(Ipv4Address origin, Ipv4Address group, uint32_t inputInterface, std::vector<uint32_t> outputInterfaces);
-    // void SetMulticastRoutes(std::list<Ipv4MulticastRoutingTableEntry *> multicast_routes);
+    //same as arbiter-multicast
+    void AddMulticastRoute(Ipv4Address origin, Ipv4Address group, uint32_t inputInterface, std::vector<uint32_t> outputInterfaces);
+    void SetMulticastRoutes(std::list<Ipv4MulticastRoutingTableEntry *> multicast_routes);
+    void ClearMulticastRoutes();
+    // std::vector<std::tuple<int32_t, int32_t, int32_t>> GetNextHopList();
     ArbiterResult DecideMulticast(int32_t source_node_id, Ptr<const Packet> pkt, Ipv4Header const &ipHeader);
 
     // Static routing table
     // std::string StringReprOfForwardingState();
-
 
 private:
     std::list<Ipv4MulticastRoutingTableEntry *> m_multicast_routes;

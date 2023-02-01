@@ -470,25 +470,46 @@ GSLNetDevice::GetBroadcast (void) const
   throw std::runtime_error("Broadcast not supported (only ARP would use broadcast, whose cache should have already been filled).");
 }
 
+// bool
+// GSLNetDevice::IsMulticast (void) const
+// {
+//   NS_LOG_FUNCTION (this);
+//   return false;
+// }
+
+// Address
+// GSLNetDevice::GetMulticast (Ipv4Address multicastGroup) const
+// {
+//   NS_LOG_FUNCTION (this);
+//   throw std::runtime_error("Multicast not supported.");
+// }
+
+// Address
+// GSLNetDevice::GetMulticast (Ipv6Address addr) const
+// {
+//   NS_LOG_FUNCTION (this << addr);
+//   throw std::runtime_error("Multicast not supported.");
+// }
+
 bool
 GSLNetDevice::IsMulticast (void) const
 {
   NS_LOG_FUNCTION (this);
-  return false;
+  return true;
 }
 
 Address
 GSLNetDevice::GetMulticast (Ipv4Address multicastGroup) const
 {
   NS_LOG_FUNCTION (this);
-  throw std::runtime_error("Multicast not supported.");
+  return Mac48Address ("01:00:5e:00:00:00");
 }
 
 Address
 GSLNetDevice::GetMulticast (Ipv6Address addr) const
 {
   NS_LOG_FUNCTION (this << addr);
-  throw std::runtime_error("Multicast not supported.");
+  return Mac48Address ("33:33:00:00:00:00");
 }
 
 bool

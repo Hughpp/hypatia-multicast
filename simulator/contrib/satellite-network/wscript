@@ -17,6 +17,7 @@ def build(bld):
         'model/arbiter-single-forward.cc',
         'helper/arbiter-single-forward-helper.cc',
         'helper/gsl-if-bandwidth-helper.cc',
+        'helper/arbiter-sat-multicast-helper.cc',
         ]
 
     module_test = bld.create_ns3_module_test_library('satellite-network')
@@ -41,6 +42,7 @@ def build(bld):
         'model/arbiter-single-forward.h',
         'helper/arbiter-single-forward-helper.h',
         'helper/gsl-if-bandwidth-helper.h',
+        'helper/arbiter-sat-multicast-helper.h',
         ]
 
     if bld.env.ENABLE_EXAMPLES:

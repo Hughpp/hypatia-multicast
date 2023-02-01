@@ -21,6 +21,10 @@
 
 namespace ns3 {
 
+ArbiterSingleForwardHelper::ArbiterSingleForwardHelper() {
+
+}
+
 ArbiterSingleForwardHelper::ArbiterSingleForwardHelper (Ptr<BasicSimulation> basicSimulation, NodeContainer nodes) {
     std::cout << "SETUP SINGLE FORWARDING ROUTING" << std::endl;
     m_basicSimulation = basicSimulation;
@@ -28,13 +32,15 @@ ArbiterSingleForwardHelper::ArbiterSingleForwardHelper (Ptr<BasicSimulation> bas
 
     // Read in initial forwarding state
     std::cout << "  > Create initial single forwarding state" << std::endl;
-    std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> initial_forwarding_state = InitialEmptyForwardingState();
+    // std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> initial_forwarding_state = InitialEmptyForwardingState();
+    InitialEmptyForwardingState();
     basicSimulation->RegisterTimestamp("Create initial single forwarding state");
 
     // Set the routing arbiters
     std::cout << "  > Setting the routing arbiter on each node" << std::endl;
     for (size_t i = 0; i < m_nodes.GetN(); i++) {
-        Ptr<ArbiterSingleForward> arbiter = CreateObject<ArbiterSingleForward>(m_nodes.Get(i), m_nodes, initial_forwarding_state[i]);
+        // Ptr<ArbiterSingleForward> arbiter = CreateObject<ArbiterSingleForward>(m_nodes.Get(i), m_nodes, initial_forwarding_state[i]);
+        Ptr<ArbiterSingleForward> arbiter = CreateObject<ArbiterSingleForward>(m_nodes.Get(i), m_nodes, m_globalForwardingState[i]);
         m_arbiters.push_back(arbiter);
         m_nodes.Get(i)->GetObject<Ipv4>()->GetRoutingProtocol()->GetObject<Ipv4ArbiterRouting>()->SetArbiter(arbiter);
     }
@@ -44,23 +50,39 @@ ArbiterSingleForwardHelper::ArbiterSingleForwardHelper (Ptr<BasicSimulation> bas
     m_dynamicStateUpdateIntervalNs = parse_positive_int64(m_basicSimulation->GetConfigParamOrFail("dynamic_state_update_interval_ns"));
     std::cout << "  > Forward state update interval: " << m_dynamicStateUpdateIntervalNs << "ns" << std::endl;
     std::cout << "  > Perform first forwarding state load for t=0" << std::endl;
-    UpdateForwardingState(0);
+
+    // UpdateForwardingState(0);
+    int64_t t = 0;
+    UpdateForwardingState(t);
+    // Given that this code will only be used with satellite networks, this is okay-ish,
+    // but it does create a very tight coupling between the two -- technically this class
+    // can be used for other purposes as well
+    if (!parse_boolean(m_basicSimulation->GetConfigParamOrDefault("satellite_network_force_static", "false"))) {
+
+        // Plan the next update
+        int64_t next_update_ns = t + m_dynamicStateUpdateIntervalNs;
+        if (next_update_ns < m_basicSimulation->GetSimulationEndTimeNs()) {
+            Simulator::Schedule(NanoSeconds(m_dynamicStateUpdateIntervalNs), &ArbiterSingleForwardHelper::UpdateForwardingState, this, next_update_ns);
+        }
+
+    }
     basicSimulation->RegisterTimestamp("Create initial single forwarding state");
 
     std::cout << std::endl;
 }
 
-std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>>
-ArbiterSingleForwardHelper::InitialEmptyForwardingState() {
-    std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> initial_forwarding_state;
+// std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> ArbiterSingleForwardHelper::InitialEmptyForwardingState() {
+void ArbiterSingleForwardHelper::InitialEmptyForwardingState() {
+    // std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> initial_forwarding_state;
     for (size_t i = 0; i < m_nodes.GetN(); i++) {
         std::vector <std::tuple<int32_t, int32_t, int32_t>> next_hop_list;
         for (size_t j = 0; j < m_nodes.GetN(); j++) {
             next_hop_list.push_back(std::make_tuple(-2, -2, -2)); // -2 indicates an invalid entry
         }
-        initial_forwarding_state.push_back(next_hop_list);
+        m_globalForwardingState.push_back(next_hop_list);
     }
-    return initial_forwarding_state;
+    // m_globalForwardingState = initial_forwarding_state;
+    // return initial_forwarding_state;
 }
 
 void ArbiterSingleForwardHelper::UpdateForwardingState(int64_t t) {
@@ -144,6 +166,8 @@ void ArbiterSingleForwardHelper::UpdateForwardingState(int64_t t) {
             }
 
             // Add to forwarding state
+            m_globalForwardingState[current_node_id][target_node_id] = std::make_tuple(next_hop_node_id, 1 + my_if_id, 1 + next_if_id);
+            std::cout << "update arbiters state cur=" << current_node_id << std::endl;
             m_arbiters.at(current_node_id)->SetSingleForwardState(
                     target_node_id,
                     next_hop_node_id,
@@ -163,18 +187,19 @@ void ArbiterSingleForwardHelper::UpdateForwardingState(int64_t t) {
         throw std::runtime_error(format_string("File %s could not be read.", filename.c_str()));
     }
 
-    // Given that this code will only be used with satellite networks, this is okay-ish,
-    // but it does create a very tight coupling between the two -- technically this class
-    // can be used for other purposes as well
-    if (!parse_boolean(m_basicSimulation->GetConfigParamOrDefault("satellite_network_force_static", "false"))) {
+    // old code, move to ArbiterSingleForwardHelper()
+    // // Given that this code will only be used with satellite networks, this is okay-ish,
+    // // but it does create a very tight coupling between the two -- technically this class
+    // // can be used for other purposes as well
+    // if (!parse_boolean(m_basicSimulation->GetConfigParamOrDefault("satellite_network_force_static", "false"))) {
 
-        // Plan the next update
-        int64_t next_update_ns = t + m_dynamicStateUpdateIntervalNs;
-        if (next_update_ns < m_basicSimulation->GetSimulationEndTimeNs()) {
-            Simulator::Schedule(NanoSeconds(m_dynamicStateUpdateIntervalNs), &ArbiterSingleForwardHelper::UpdateForwardingState, this, next_update_ns);
-        }
+    //     // Plan the next update
+    //     int64_t next_update_ns = t + m_dynamicStateUpdateIntervalNs;
+    //     if (next_update_ns < m_basicSimulation->GetSimulationEndTimeNs()) {
+    //         Simulator::Schedule(NanoSeconds(m_dynamicStateUpdateIntervalNs), &ArbiterSingleForwardHelper::UpdateForwardingState, this, next_update_ns);
+    //     }
 
-    }
+    // }
 
 }
 

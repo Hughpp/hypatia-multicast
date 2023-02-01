@@ -42,6 +42,11 @@
 #include "ns3/arbiter-single-forward-helper.h"
 #include "ns3/gsl-if-bandwidth-helper.h"
 
+//new header for multicast
+#include "ns3/multicast-udp-scheduler.h"
+#include "ns3/arbiter-multicast-helper.h"
+#include "ns3/arbiter-sat-multicast-helper.h"
+
 using namespace ns3;
 
 int main(int argc, char *argv[]) {
@@ -71,8 +76,13 @@ int main(int argc, char *argv[]) {
 
     // Read topology, and install routing arbiters
     Ptr<TopologySatelliteNetwork> topology = CreateObject<TopologySatelliteNetwork>(basicSimulation, Ipv4ArbiterRoutingHelper());
-    ArbiterSingleForwardHelper arbiterHelper(basicSimulation, topology->GetNodes());
+    // ArbiterSingleForwardHelper arbiterHelper(basicSimulation, topology->GetNodes());
     GslIfBandwidthHelper gslIfBandwidthHelper(basicSimulation, topology->GetNodes()); 
+
+    MulticastUdpScheduler multicastUdpScheduler(basicSimulation, topology); // must be before of ArbiterMulticastHelper init to pass multicast_reqs
+    std::vector<MulticastUdpInfo> multicast_reqs = multicastUdpScheduler.GetMulticastReqs();
+    ArbiterSatMulticastHelper arbiterHelper(basicSimulation, topology, multicast_reqs);
+    multicastUdpScheduler.WriteResults();
 
     // Schedule flows
     TcpFlowScheduler tcpFlowScheduler(basicSimulation, topology); // Requires enable_tcp_flow_scheduler=true
