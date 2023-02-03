@@ -28,8 +28,23 @@
 
 #include "ns3/net-device-container.h"
 #include "ns3/node-container.h"
-#include "ns3/gsl-net-device.h"
 
+#include "ns3/abort.h"
+#include "ns3/log.h"
+#include "ns3/simulator.h"
+#include "ns3/gsl-net-device.h"
+#include "ns3/gsl-channel.h"
+#include "ns3/queue.h"
+#include "ns3/net-device-queue-interface.h"
+#include "ns3/config.h"
+#include "ns3/packet.h"
+#include "ns3/names.h"
+#include "ns3/string.h"
+#include "ns3/mpi-interface.h"
+#include "ns3/mpi-receiver.h"
+
+#include "ns3/trace-helper.h"
+#include "ns3/gsl-helper.h"
 
 namespace ns3 {
 
@@ -53,7 +68,9 @@ public:
 
   // Installers
   NetDeviceContainer Install (NodeContainer satellites, NodeContainer gss, std::vector<std::tuple<int32_t, double>>& node_gsl_if_info);
+  // std::pair<NetDeviceContainer, Ptr<GSLChannel>> Install (NodeContainer satellites, NodeContainer gss, std::vector<std::tuple<int32_t, double>>& node_gsl_if_info);
   Ptr<GSLNetDevice> Install (Ptr<Node> node, Ptr<GSLChannel> channel);
+  Ptr<GSLChannel> m_gslChannel; //access by topology
 
 private:
   ObjectFactory m_queueFactory;         //!< Queue Factory

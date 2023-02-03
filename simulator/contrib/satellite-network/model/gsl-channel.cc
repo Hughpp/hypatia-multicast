@@ -73,13 +73,15 @@ GSLChannel::TransmitStart (
 
   Mac48Address address48 = Mac48Address::ConvertFrom (dst_address);
   MacToNetDeviceI it = m_link.find (address48);
+  std::cout << "    transmitStart dst_mac=" << address48 << "  src_node=" << src->GetNode()->GetId();
   if (it != m_link.end ()) {
     Ptr<GSLNetDevice> dst = it->second;
+    std::cout << " ->  dst_node=" << dst->GetNode()->GetId() << " dst_mac=" << dst->GetAddress() << std::endl;
     bool sameSystem = (src->GetNode()->GetSystemId() == dst->GetNode()->GetSystemId());
     return TransmitTo(p, src, it->second, txTime, sameSystem);
   }
 
-  std::cout << "addr48=" << address48 << "    rawaddr=" << dst_address << std::endl;
+  std::cout << " -> Not Found!" << std::endl;
   NS_ABORT_MSG("MAC address could not be mapped to a network device.");
   return false;
 }
@@ -173,6 +175,21 @@ GSLChannel::GetDevice (std::size_t i) const
 {
     NS_LOG_FUNCTION (this << i);
     return m_net_devices.at(i);
+}
+
+void 
+GSLChannel::SetLogicLink(Mac48Address tarMac, Ptr<GSLNetDevice> tarDev) {
+  std::cout << "            SetLogicLink:start" << std::endl;
+  // for(auto entry: m_link) {
+  //   std::cout << "            mac" << entry.first << std::endl;
+  // }
+  m_link[tarMac] = tarDev;
+  std::cout << "            SetLogicLink:finished" << std::endl;
+}
+
+void
+GSLChannel::DelLogicLink(Mac48Address tarMac) {
+  m_link.erase(tarMac);
 }
 
 } // namespace ns3

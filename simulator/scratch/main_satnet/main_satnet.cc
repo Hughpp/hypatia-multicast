@@ -82,7 +82,6 @@ int main(int argc, char *argv[]) {
     MulticastUdpScheduler multicastUdpScheduler(basicSimulation, topology); // must be before of ArbiterMulticastHelper init to pass multicast_reqs
     std::vector<MulticastUdpInfo> multicast_reqs = multicastUdpScheduler.GetMulticastReqs();
     ArbiterSatMulticastHelper arbiterHelper(basicSimulation, topology, multicast_reqs);
-    multicastUdpScheduler.WriteResults();
 
     // Schedule flows
     TcpFlowScheduler tcpFlowScheduler(basicSimulation, topology); // Requires enable_tcp_flow_scheduler=true
@@ -104,6 +103,9 @@ int main(int argc, char *argv[]) {
 
     // Write pingmesh results
     pingmeshScheduler.WriteResults();
+
+    // write multicast results
+    multicastUdpScheduler.WriteResults();
 
     // Collect utilization statistics
     topology->CollectUtilizationStatistics();

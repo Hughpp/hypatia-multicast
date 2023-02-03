@@ -53,6 +53,7 @@ namespace ns3 {
         std::vector<std::vector<std::tuple<int32_t, int32_t, int32_t>>> m_globalForwardingState;
         std::vector<MulticastUdpInfo> m_multicast_reqs;
         Ptr<TopologySatelliteNetwork> m_topology;
+        std::set<Mac48Address> m_lastMulticastMacs;
     };
 
 } // namespace ns3

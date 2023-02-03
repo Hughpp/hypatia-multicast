@@ -309,6 +309,7 @@ namespace ns3 {
 
         // Link helper
         GSLHelper gsl_helper;
+        m_gslChannel = gsl_helper.m_gslChannel;
         std::string max_queue_size_str = format_string("%" PRId64 "p", m_gsl_max_queue_size_pkts);
         gsl_helper.SetQueue("ns3::DropTailQueue<Packet>", "MaxSize", QueueSizeValue(QueueSize(max_queue_size_str)));
         gsl_helper.SetDeviceAttribute ("DataRate", DataRateValue (DataRate (std::to_string(m_gsl_data_rate_megabit_per_s) + "Mbps")));

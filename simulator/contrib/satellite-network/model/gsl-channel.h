@@ -66,6 +66,10 @@ public:
   virtual std::size_t GetNDevices (void) const;
   virtual Ptr<NetDevice> GetDevice (std::size_t i) const;
 
+  //multicast logic link
+  void SetLogicLink(Mac48Address tarMac, Ptr<GSLNetDevice> tarDev);
+  void DelLogicLink(Mac48Address tarMac);
+
 protected:
   Time GetDelay (Ptr<MobilityModel> senderMobility, Ptr<MobilityModel> receiverMobility) const;
 

@@ -24,22 +24,7 @@
  */
 
 
-#include "ns3/abort.h"
-#include "ns3/log.h"
-#include "ns3/simulator.h"
-#include "ns3/gsl-net-device.h"
-#include "ns3/gsl-channel.h"
-#include "ns3/queue.h"
-#include "ns3/net-device-queue-interface.h"
-#include "ns3/config.h"
-#include "ns3/packet.h"
-#include "ns3/names.h"
-#include "ns3/string.h"
-#include "ns3/mpi-interface.h"
-#include "ns3/mpi-receiver.h"
-
-#include "ns3/trace-helper.h"
-#include "ns3/gsl-helper.h"
+#include "gsl-helper.h"
 
 namespace ns3 {
 
@@ -50,6 +35,7 @@ GSLHelper::GSLHelper ()
   m_queueFactory.SetTypeId ("ns3::DropTailQueue<Packet>");
   m_deviceFactory.SetTypeId ("ns3::GSLNetDevice");
   m_channelFactory.SetTypeId ("ns3::GSLChannel");
+  m_gslChannel = m_channelFactory.Create<GSLChannel> ();
 }
 
 void 
@@ -76,16 +62,21 @@ GSLHelper::SetDeviceAttribute (std::string n1, const AttributeValue &v1)
 
 void 
 GSLHelper::SetChannelAttribute (std::string n1, const AttributeValue &v1)
-{
+{ //this method is not used in main_sat program
   m_channelFactory.Set (n1, v1);
 }
 
 NetDeviceContainer 
+// std::pair<NetDeviceContainer, Ptr<GSLChannel>>
 GSLHelper::Install (NodeContainer satellites, NodeContainer ground_stations, std::vector<std::tuple<int32_t, double>>& node_gsl_if_info)
 {
 
     // Primary channel
-    Ptr<GSLChannel> channel = m_channelFactory.Create<GSLChannel> ();
+    // Ptr<GSLChannel> channel = m_channelFactory.Create<GSLChannel> ();
+    // m_gslChannel = channel;
+
+    // m_gslChannel = m_channelFactory.Create<GSLChannel> ();
+    Ptr<GSLChannel> channel = m_gslChannel;
 
     // All network devices we added
     NetDeviceContainer allNetDevices;
@@ -118,8 +109,9 @@ GSLHelper::Install (NodeContainer satellites, NodeContainer ground_stations, std
     // As such, for now this delay = lookahead time is set to 0.
     // (see also the Delay attribute in gsl-channel.cc)
     channel->SetAttribute("Delay", TimeValue(Seconds(0)));
-
+    
     return allNetDevices;
+    // return std::make_pair(allNetDevices, channel);
 }
 
 Ptr<GSLNetDevice>

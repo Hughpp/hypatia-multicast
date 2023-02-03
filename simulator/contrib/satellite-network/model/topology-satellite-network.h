@@ -47,6 +47,7 @@
 #include "ns3/satellite-position-helper.h"
 #include "ns3/point-to-point-laser-helper.h"
 #include "ns3/gsl-helper.h"
+#include "ns3/gsl-channel.h"
 #include "ns3/mobility-helper.h"
 #include "ns3/mobility-model.h"
 #include "ns3/ipv4-static-routing-helper.h"
@@ -86,6 +87,8 @@ namespace ns3 {
 
         // Post-processing
         void CollectUtilizationStatistics();
+
+        Ptr<GSLChannel> m_gslChannel;
 
     private:
 

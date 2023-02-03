@@ -44,10 +44,14 @@ namespace ns3 {
         //update multicast state according to unicast state saved at m_globalForwardingState
 
         //first, clear all the old multicast table
-        for (size_t i = 0; i < m_nodes.GetN(); i++) {
+        for (auto oldMac: m_lastMulticastMacs) { //mac
+            m_topology->m_gslChannel->DelLogicLink(oldMac);
+        }
+        m_lastMulticastMacs.clear();
+        for (size_t i = 0; i < m_nodes.GetN(); i++) { //ip
             m_arbiters[i]->ClearMulticastRoutes();
         }
-
+        
         //second, add new state
         std::cout << "  > Calculating multicast route from m_globalForwardingState" << std::endl;
         for (MulticastUdpInfo req : m_multicast_reqs) {
@@ -59,9 +63,13 @@ namespace ns3 {
             std::set<uint32_t> nodes_ids_to_install; //the node to add multicast routes
             std::map<uint32_t, std::set<uint32_t>> node_id_to_oifs; //node id to out ifs(route info)
             std::map<uint32_t, uint32_t> node_id_to_iif; //node id to in ifs(route info)
+            std::set<std::pair<Mac48Address, Ptr<GSLNetDevice>>> mac_toset; //record logic mac to set
             int64_t src_id = req.GetFromNodeId();
             std::set<int64_t> dst_ids = req.GetToNodeIds();
             uint32_t cur_node_id, nxt_node_id, cur_oif_id=0, nxt_iif_id=0;
+            int64_t nxthop_of_src = -1;
+            Ipv4Address origin = m_nodes.Get(src_id)->GetObject<Ipv4>()->GetAddress(*node_id_to_oifs[src_id].begin(), 0).GetLocal();
+            Ipv4Address group = Ipv4Address(m_topology->GetMulticastGroupBase().Get() + req.GetUdpBurstId());
             for (auto dst_id : dst_ids) {
                 cur_node_id = src_id;
                 while (cur_node_id != (uint32_t)dst_id) {
@@ -69,7 +77,13 @@ namespace ns3 {
                     nxt_node_id = std::get<0>(nexthop_myif_nxtif); 
                     cur_oif_id = std::get<1>(nexthop_myif_nxtif);
                     nxt_iif_id = std::get<2>(nexthop_myif_nxtif);
-                    nodes_ids_to_install.insert(cur_node_id); 
+                    nodes_ids_to_install.insert(cur_node_id);
+                    //src single nexthop check
+                    if (cur_node_id == src_id){
+                        if (nxthop_of_src != -1) throw std::runtime_error("MulticastRoutingHelper: Src oif num != 1(not supported by ns3 routing protocol)");
+                        nxthop_of_src = (int64_t)nxt_node_id;
+                    }
+                    // std::cout << "  ******* src_id=" << src_id << " dst_id=" << dst_id << " cur_node=" << cur_node_id << "-oif=" << cur_oif_id << " nxthop_id=" << nxt_node_id << "-iif=" << nxt_iif_id << std::endl;
                     if (node_id_to_oifs.find(cur_node_id) != node_id_to_oifs.end()) { //cur_node_id has been recorded
                         node_id_to_oifs[cur_node_id].insert(cur_oif_id); // add oif id to set
                     }
@@ -77,16 +91,37 @@ namespace ns3 {
                         node_id_to_oifs.insert({cur_node_id, {cur_oif_id}}); // init a set
                     }
                     node_id_to_iif[nxt_node_id] = nxt_iif_id;
+                    //handel mac
+                    if ((m_topology->IsSatelliteId(cur_node_id) && m_topology->IsGroundStationId(nxt_node_id)) || 
+                    (m_topology->IsGroundStationId(cur_node_id) && m_topology->IsSatelliteId(nxt_node_id))) { //sat<->gs 
+                        Ptr<GSLNetDevice> tar_dev = DynamicCast<GSLNetDevice>(m_nodes.Get(nxt_node_id)->GetDevice(nxt_iif_id));
+                        Ptr<GSLNetDevice> src_dev = DynamicCast<GSLNetDevice>(m_nodes.Get(cur_node_id)->GetDevice(cur_oif_id));
+                        mac_toset.insert(std::make_pair(Mac48Address::ConvertFrom(src_dev->GetMulticast(group)), tar_dev));
+                        // mac_toset.insert(tar_dev);
+                        // right but TODO
+                        // Address src_mac = src_dev->GetMulticast(group);
+                        // Mac48Address src_mac48 = Mac48Address::ConvertFrom(src_mac);
+                        // m_topology->m_gslChannel->SetLogicLink(src_mac48, tar_dev); //bug
+                    }
 
                     cur_node_id = nxt_node_id; //hop to next
                 }
             }
-            //add multicast route for this req
             if (node_id_to_oifs[src_id].size() != 1) {
-                throw std::runtime_error("CalGlobalMulticastState: Src oif num != 1(not supported by ns3 routing protocol)");
+                throw std::runtime_error("MulticastRoutingHelper: Src oif num != 1(not supported by ns3 routing protocol)");
             }
-            Ipv4Address origin = m_nodes.Get(src_id)->GetObject<Ipv4>()->GetAddress(*node_id_to_oifs[src_id].begin(), 0).GetLocal();
-            Ipv4Address group = Ipv4Address(m_topology->GetMulticastGroupBase().Get() + req.GetUdpBurstId());
+            
+            
+            std::cout << "  > Set Multicast mac and ip table for req=" << req.GetUdpBurstId() << "  addr:" << group << std::endl;
+            //set multicast logic mac
+            for (auto p: mac_toset) {
+                Mac48Address local_mac = p.first;
+                Ptr<GSLNetDevice> tar_dev = p.second;
+                std::cout << "    > MulticastSetLogicMac local mac=" << local_mac << "  toNode=" << tar_dev->GetNode()->GetId() << std::endl;
+                m_topology->m_gslChannel->SetLogicLink(local_mac, tar_dev); 
+                m_lastMulticastMacs.insert(local_mac);
+            }
+            //add multicast route for this req
             uint32_t iif_id;
             for (auto node_id_to_install : nodes_ids_to_install) {
                 if (node_id_to_install == src_id) {
