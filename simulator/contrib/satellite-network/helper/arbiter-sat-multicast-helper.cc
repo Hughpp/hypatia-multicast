@@ -97,20 +97,13 @@ namespace ns3 {
                         Ptr<GSLNetDevice> tar_dev = DynamicCast<GSLNetDevice>(m_nodes.Get(nxt_node_id)->GetDevice(nxt_iif_id));
                         Ptr<GSLNetDevice> src_dev = DynamicCast<GSLNetDevice>(m_nodes.Get(cur_node_id)->GetDevice(cur_oif_id));
                         mac_toset.insert(std::make_pair(Mac48Address::ConvertFrom(src_dev->GetMulticast(group)), tar_dev));
-                        // mac_toset.insert(tar_dev);
-                        // right but TODO
-                        // Address src_mac = src_dev->GetMulticast(group);
-                        // Mac48Address src_mac48 = Mac48Address::ConvertFrom(src_mac);
-                        // m_topology->m_gslChannel->SetLogicLink(src_mac48, tar_dev); //bug
                     }
-
                     cur_node_id = nxt_node_id; //hop to next
                 }
             }
             if (node_id_to_oifs[src_id].size() != 1) {
                 throw std::runtime_error("MulticastRoutingHelper: Src oif num != 1(not supported by ns3 routing protocol)");
             }
-            
             
             std::cout << "  > Set Multicast mac and ip table for req=" << req.GetUdpBurstId() << "  addr:" << group << std::endl;
             //set multicast logic mac

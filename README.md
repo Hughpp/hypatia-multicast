@@ -64,4 +64,9 @@ After building successfully, enter directionary `simulator` and run `basic_main`
   
 ## satellite network multicast simulation
 
+   ```
+   cd simulator
+   ./waf --run="main_satnet --run_dir='../runsim/sat_multi'" 2>&1 | tee '../runsim/sat_multi/logs_ns3/console.txt'
+   ```
+
 *Future Work...*
