@@ -80,7 +80,7 @@ namespace ns3 {
                     nodes_ids_to_install.insert(cur_node_id);
                     //src single nexthop check
                     if (cur_node_id == src_id){
-                        if (nxthop_of_src != -1) throw std::runtime_error("MulticastRoutingHelper: Src oif num != 1(not supported by ns3 routing protocol)");
+                        if (nxthop_of_src != -1 && nxthop_of_src != nxt_node_id) throw std::runtime_error("MulticastRoutingHelper: Src oif num != 1(not supported by ns3 routing protocol)");
                         nxthop_of_src = (int64_t)nxt_node_id;
                     }
                     // std::cout << "  ******* src_id=" << src_id << " dst_id=" << dst_id << " cur_node=" << cur_node_id << "-oif=" << cur_oif_id << " nxthop_id=" << nxt_node_id << "-iif=" << nxt_iif_id << std::endl;
