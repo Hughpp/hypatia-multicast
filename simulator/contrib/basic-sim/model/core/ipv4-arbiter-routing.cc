@@ -22,6 +22,7 @@
   if (m_ipv4 && m_ipv4->GetObject<Node> ()) { \
       std::clog << Simulator::Now ().GetSeconds () \
                 << " [node " << m_ipv4->GetObject<Node> ()->GetId () << "] "; }
+#define ROUTING_PRINT false
 
 #include <iomanip>
 #include "ns3/log.h"
@@ -181,8 +182,6 @@ namespace ns3 {
         NS_LOG_FUNCTION(this << p << header << oif << sockerr);
         Ipv4Address destination = header.GetDestination();
 
-        // std::cout << "  > ByLul:route output " << destination << std::endl;
-
         // Multi-cast to multiple interfaces is not supported
         if (destination.IsMulticast()) {
             // throw std::runtime_error("Multi-cast not supported");
@@ -215,11 +214,11 @@ namespace ns3 {
         // Multi-cast logic
         if (ipHeader.GetDestination().IsMulticast()) {
             // throw std::runtime_error("Multi-cast not supported.");
-            std::cout << "    >>> + multicast arbiter routing: Get a multicast pkt at " << m_ipv4->GetAddress(1, 0).GetLocal() << std::endl << "          [HEADER]: " << ipHeader << std::endl;
+            if (ROUTING_PRINT) std::cout << "    >>> + multicast arbiter routing: Get a multicast pkt at " << m_ipv4->GetAddress(1, 0).GetLocal() << std::endl << "          [HEADER]: " << ipHeader << std::endl;
             if (m_ipv4->IsDestinationAddress (ipHeader.GetDestination (), iif)) {
-                std::cout << "     >>   multicast arbiter routing: LocalDelivery(lcb) deciding..." << std::endl;
+                if (ROUTING_PRINT) std::cout << "     >>   multicast arbiter routing: LocalDelivery(lcb) deciding..." << std::endl;
                 if (!lcb.IsNull ()) {
-                    std::cout << "      > - multicast arbiter routing: valid lcb, pkt passed to app." << std::endl;
+                    if (ROUTING_PRINT) std::cout << "      > - multicast arbiter routing: valid lcb, pkt passed to app." << std::endl;
                     NS_LOG_LOGIC ("Local delivery to " << ipHeader.GetDestination ());
                     Ptr<Packet> packetCopy = p->Copy ();
                     lcb (packetCopy, ipHeader, iif);
@@ -231,30 +230,30 @@ namespace ns3 {
                     // multicast routing protocol can handle it.  It should be possible
                     // to extend this to explicitly check whether it is a unicast
                     // packet, and invoke the error callback if so
-                    std::cout << "      >   multicast arbiter routing: null lcb" << std::endl;
+                    if (ROUTING_PRINT) std::cout << "      >   multicast arbiter routing: null lcb" << std::endl;
                     // return false;
                 }
             }    
             NS_LOG_LOGIC ("ByLul-Multicast destination");
             Ptr<Ipv4MulticastRoute> mrtentry = LookupArbiter(ipHeader.GetDestination (), ipHeader.GetSource(), ipHeader, p, iif); 
-            std::cout << "     >>   multicast arbiter routing: MulticastForwarding(mcb) deciding..." << std::endl;
-            // std::cout << "    >>> multicast arbiter routing: mcb decide at " << m_ipv4->GetAddress(1, 0).GetLocal() << std::endl;
+            if (ROUTING_PRINT) std::cout << "     >>   multicast arbiter routing: MulticastForwarding(mcb) deciding..." << std::endl;
             if (mrtentry){
                 NS_LOG_LOGIC ("ByLul-Multicast route found");
                 //print start
-                std::cout << "      > - multicast arbiter routing: route found, pkt passed to output interfaces." << std::endl;
-                std::cout << "          [ENTRY]: in_if=" << mrtentry->GetParent() << " src_addr=" << mrtentry->GetOrigin() << " dest_addr=" << mrtentry->GetGroup() << std::endl << "                    ";
-                for(auto it : mrtentry->GetOutputTtlMap()){
-                    std::cout << "out_if:" << it.first << " ttl=" << it.second << "; ";
+                if (ROUTING_PRINT) {
+                    std::cout << "      > - multicast arbiter routing: route found, pkt passed to output interfaces." << std::endl;
+                    std::cout << "          [ENTRY]: in_if=" << mrtentry->GetParent() << " src_addr=" << mrtentry->GetOrigin() << " dest_addr=" << mrtentry->GetGroup() << std::endl << "                    ";
+                    for(auto it : mrtentry->GetOutputTtlMap()){
+                        std::cout << "out_if:" << it.first << " ttl=" << it.second << "; ";
+                    }
+                    std::cout << std::endl << std::endl;
                 }
-                std::cout << std::endl << std::endl;
                 //print end
                 mcb (mrtentry, p, ipHeader); // multicast forwarding callback
                 return true;
             }
             else{
-                NS_LOG_LOGIC ("ByLul-Multicast route not found");
-                std::cout << "      >   multicast arbiter routing: multicast route not found." << std::endl << std::endl;
+                if (ROUTING_PRINT) std::cout << "      >   multicast arbiter routing: multicast route not found." << std::endl << std::endl;
                 return false; // Let other routing protocols try to handle this
             }
         }

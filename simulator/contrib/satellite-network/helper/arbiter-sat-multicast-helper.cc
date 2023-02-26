@@ -1,5 +1,7 @@
 #include "arbiter-sat-multicast-helper.h"
 
+#define ROUTING_HELPER_PRINT true
+
 namespace ns3 {
 
     ArbiterSatMulticastHelper::ArbiterSatMulticastHelper(Ptr<BasicSimulation> basicSimulation, Ptr<TopologySatelliteNetwork> topology, const std::vector<MulticastUdpInfo> &multicast_reqs) {
@@ -44,8 +46,9 @@ namespace ns3 {
         //update multicast state according to unicast state saved at m_globalForwardingState
 
         //first, clear all the old multicast table
+        std::set<Mac48Address> multicastMacsToDel; //here just record old mac, del them after new mac updated
         for (auto oldMac: m_lastMulticastMacs) { //mac
-            m_topology->m_gslChannel->DelLogicLink(oldMac);
+            multicastMacsToDel.insert(oldMac);
         }
         m_lastMulticastMacs.clear();
         for (size_t i = 0; i < m_nodes.GetN(); i++) { //ip
@@ -113,6 +116,10 @@ namespace ns3 {
                 std::cout << "    > MulticastSetLogicMac local mac=" << local_mac << "  toNode=" << tar_dev->GetNode()->GetId() << std::endl;
                 m_topology->m_gslChannel->SetLogicLink(local_mac, tar_dev); 
                 m_lastMulticastMacs.insert(local_mac);
+                //update macToDel
+                if(multicastMacsToDel.find(local_mac) != multicastMacsToDel.end()) { 
+                    multicastMacsToDel.erase(local_mac);
+                }
             }
             //add multicast route for this req
             uint32_t iif_id;
@@ -128,6 +135,12 @@ namespace ns3 {
             }
         }
 
+        //acturally del the out-dated mac
+        for (auto oldMac: multicastMacsToDel) { //mac
+            //del after 10ms
+            Simulator::Schedule(NanoSeconds(t+10000000), &GSLChannel::DelLogicLink, m_topology->m_gslChannel, oldMac); //delayed del mac
+            // m_topology->m_gslChannel->DelLogicLink(oldMac);
+        }
     }
 
     void ArbiterSatMulticastHelper::InitialGlobalRoutingState() {

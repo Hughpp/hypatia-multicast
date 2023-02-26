@@ -189,6 +189,7 @@ GSLChannel::SetLogicLink(Mac48Address tarMac, Ptr<GSLNetDevice> tarDev) {
 
 void
 GSLChannel::DelLogicLink(Mac48Address tarMac) {
+  // std::cout << "********************************************channel del logic link: " << tarMac << std::endl;
   m_link.erase(tarMac);
 }
 
