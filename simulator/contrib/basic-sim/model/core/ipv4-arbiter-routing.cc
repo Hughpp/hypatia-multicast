@@ -211,8 +211,26 @@ namespace ns3 {
         NS_ASSERT(m_ipv4->GetInterfaceForDevice(idev) >= 0);
         uint32_t iif = m_ipv4->GetInterfaceForDevice(idev);
 
-        // Multi-cast logic
+        // Multicast logic
         if (ipHeader.GetDestination().IsMulticast()) {
+            //get bs
+            uint32_t unknownsz = 24; //unknown = udp(8) + id(8) + seq(8),bs len = 16 bytes
+            uint32_t shift = unknownsz/4; //first 16 byte is not belong to inputIdSeq
+            uint32_t bs[20];
+            p->CopyData((uint8_t *)bs, unknownsz+16);
+            for(uint32_t i = 0; i < 4; i++){
+                std::cout << bs[shift+i] << std::endl;
+            }
+            // IdSeqHeader inputIdSeq;
+            // p->PeekHeader (inputIdSeq);
+            // std::cout << inputIdSeq.GetId() << std::endl;
+            // std::cout << inputIdSeq.GetSeq() << std::endl;
+            // uint32_t* bier_bs = inputIdSeq.GetBS();
+            // for(int i = 0; i < 4; ++i){
+            //     std::cout << bier_bs[i] << std::endl;
+            // }
+            std::cout << std::endl;
+
             // throw std::runtime_error("Multi-cast not supported.");
             if (ROUTING_PRINT) std::cout << "    >>> + multicast arbiter routing: Get a multicast pkt at " << m_ipv4->GetAddress(1, 0).GetLocal() << std::endl << "          [HEADER]: " << ipHeader << std::endl;
             if (m_ipv4->IsDestinationAddress (ipHeader.GetDestination (), iif)) {

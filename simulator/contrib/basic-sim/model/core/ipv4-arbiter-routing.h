@@ -33,6 +33,8 @@
 #include "ns3/arbiter.h"
 #include "ns3/point-to-point-net-device.h"
 #include "ns3/point-to-point-channel.h"
+#include "ns3/id-seq-header.h"
+#include "ns3/udp-header.h"
 
 namespace ns3 {
 

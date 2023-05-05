@@ -63,6 +63,7 @@ namespace ns3 {
     MulticastUdpApplication::MulticastUdpApplication() {
         NS_LOG_FUNCTION(this);
         m_next_internal_burst_idx = 0;
+        m_bier = true;
     }
 
     MulticastUdpApplication::~MulticastUdpApplication() {
@@ -187,27 +188,85 @@ namespace ns3 {
     MulticastUdpApplication::TransmitFullPacket(size_t internal_burst_idx) {
 
         // Header with (udp_burst_id, seq_no)
-        IdSeqHeader idSeq;
-        idSeq.SetId(std::get<0>(m_outgoing_bursts[internal_burst_idx]).GetUdpBurstId());
-        idSeq.SetSeq(m_outgoing_bursts_packets_sent_counter[internal_burst_idx]);
+        // IdSeqHeader idSeq;
+        if(!m_bier) { //non-BIER pkt construct
+            // std::cout << "non-BIER pkt construct" << std::endl;
+            IdSeqHeader idSeq;
+            idSeq.SetId(std::get<0>(m_outgoing_bursts[internal_burst_idx]).GetUdpBurstId());
+            idSeq.SetSeq(m_outgoing_bursts_packets_sent_counter[internal_burst_idx]);
 
-        // One more packet will be sent out
-        m_outgoing_bursts_packets_sent_counter[internal_burst_idx] += 1;
+            // One more packet will be sent out
+            m_outgoing_bursts_packets_sent_counter[internal_burst_idx] += 1;
 
-        // Log precise timestamp sent away of the sequence packet if needed
-        if (m_outgoing_bursts_enable_precise_logging[internal_burst_idx]) {
-            std::ofstream ofs;
-            ofs.open(m_baseLogsDir + "/" + format_string("multicast_udp_%" PRIu64 "_outgoing.csv", idSeq.GetId()), std::ofstream::out | std::ofstream::app);
-            ofs << idSeq.GetId() << "," << idSeq.GetSeq() << "," << Simulator::Now().GetNanoSeconds() << std::endl;
-            ofs.close();
+            // Log precise timestamp sent away of the sequence packet if needed
+            if (m_outgoing_bursts_enable_precise_logging[internal_burst_idx]) {
+                std::ofstream ofs;
+                ofs.open(m_baseLogsDir + "/" + format_string("multicast_udp_%" PRIu64 "_outgoing.csv", idSeq.GetId()), std::ofstream::out | std::ofstream::app);
+                ofs << idSeq.GetId() << "," << idSeq.GetSeq() << "," << Simulator::Now().GetNanoSeconds() << std::endl;
+                ofs.close();
+            }
+
+            // A full payload packet
+            Ptr<Packet> p = Create<Packet>(m_max_udp_payload_size_byte - idSeq.GetSerializedSize());
+            p->AddHeader(idSeq);
+
+            // Send out the packet to the target address
+            m_socket->SendTo(p, 0, std::get<1>(m_outgoing_bursts[internal_burst_idx]));
         }
+        else { //BIER pkt construct
+            // std::cout << "BIER pkt construct" << std::endl;
+            IdSeqBIERHeader idSeq;
+            idSeq.SetId(std::get<0>(m_outgoing_bursts[internal_burst_idx]).GetUdpBurstId());
+            idSeq.SetSeq(m_outgoing_bursts_packets_sent_counter[internal_burst_idx]);
+            //set bp
+            idSeq.SetBP(1,1);
+            idSeq.SetBP(37,1);
+            idSeq.SetBP(90,1);
+            idSeq.SetBP(120,1);
+            // One more packet will be sent out
+            m_outgoing_bursts_packets_sent_counter[internal_burst_idx] += 1;
 
-        // A full payload packet
-        Ptr<Packet> p = Create<Packet>(m_max_udp_payload_size_byte - idSeq.GetSerializedSize());
-        p->AddHeader(idSeq);
+            // Log precise timestamp sent away of the sequence packet if needed
+            if (m_outgoing_bursts_enable_precise_logging[internal_burst_idx]) {
+                std::ofstream ofs;
+                ofs.open(m_baseLogsDir + "/" + format_string("multicast_udp_%" PRIu64 "_outgoing.csv", idSeq.GetId()), std::ofstream::out | std::ofstream::app);
+                ofs << idSeq.GetId() << "," << idSeq.GetSeq() << "," << Simulator::Now().GetNanoSeconds() << std::endl;
+                ofs.close();
+            }
 
-        // Send out the packet to the target address
-        m_socket->SendTo(p, 0, std::get<1>(m_outgoing_bursts[internal_burst_idx]));
+            // A full payload packet
+            Ptr<Packet> p = Create<Packet>(m_max_udp_payload_size_byte - idSeq.GetSerializedSize());
+            p->AddHeader(idSeq);
+
+            // Send out the packet to the target address
+            m_socket->SendTo(p, 0, std::get<1>(m_outgoing_bursts[internal_burst_idx]));
+        }
+        //print bier bs
+        // std::cout << idSeq.GetId() << std::endl;
+        // std::cout << idSeq.GetSeq() << std::endl;
+        // uint32_t* bier_bs = idSeq.GetBS();
+        // for(int i = 0; i < 4; ++i){
+        //     std::cout << bier_bs[i] << std::endl;
+        // }
+        // std::cout << std::endl;
+
+        // // One more packet will be sent out
+        // m_outgoing_bursts_packets_sent_counter[internal_burst_idx] += 1;
+
+        // // Log precise timestamp sent away of the sequence packet if needed
+        // if (m_outgoing_bursts_enable_precise_logging[internal_burst_idx]) {
+        //     std::ofstream ofs;
+        //     ofs.open(m_baseLogsDir + "/" + format_string("multicast_udp_%" PRIu64 "_outgoing.csv", idSeq.GetId()), std::ofstream::out | std::ofstream::app);
+        //     ofs << idSeq.GetId() << "," << idSeq.GetSeq() << "," << Simulator::Now().GetNanoSeconds() << std::endl;
+        //     ofs.close();
+        // }
+
+        // // A full payload packet
+        // Ptr<Packet> p = Create<Packet>(m_max_udp_payload_size_byte - idSeq.GetSerializedSize());
+        // p->AddHeader(idSeq);
+
+        // // Send out the packet to the target address
+        // m_socket->SendTo(p, 0, std::get<1>(m_outgoing_bursts[internal_burst_idx]));
 
     }
 
@@ -234,6 +293,14 @@ namespace ns3 {
             // Extract burst identifier and packet sequence number
             IdSeqHeader incomingIdSeq;
             packet->RemoveHeader (incomingIdSeq);
+            //print bier bs
+            // std::cout << incomingIdSeq.GetId() << std::endl;
+            // std::cout << incomingIdSeq.GetSeq() << std::endl;
+            // uint32_t* bier_bs = incomingIdSeq.GetBS();
+            // for(int i = 0; i < 4; ++i){
+            //     std::cout << bier_bs[i] << std::endl;
+            // }
+            // std::cout << std::endl;
 
             // Count packets from incoming bursts
             m_incoming_bursts_received_counter.at(incomingIdSeq.GetId()) += 1;
