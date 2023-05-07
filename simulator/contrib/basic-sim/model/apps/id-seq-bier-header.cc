@@ -152,4 +152,28 @@ IdSeqBIERHeader::Deserialize (Buffer::Iterator start)
   return GetSerializedSize ();
 }
 
+BIERTableEntry::BIERTableEntry(uint32_t dst_id, uint32_t fbm[BS_LEN_32], uint32_t nexthop) {
+    m_dst_id = dst_id;
+    for (int i = 0; i < BS_LEN_32; ++i) m_fbm[i] = fbm[i];
+    m_nexthop = nexthop;
+}
+
+uint32_t BIERTableEntry::GetDstid(){
+    return m_dst_id;
+}
+
+uint32_t* BIERTableEntry::GetFbm(){
+    return m_fbm;
+}
+
+uint32_t BIERTableEntry::GetNexthop(){
+    return m_nexthop;
+}
+
+void BIERTableEntry::BitwiseAndWith(uint32_t tarbs[BS_LEN_32]){
+    for (int i = 0; i < BS_LEN_32; ++i) tarbs[i] &= m_fbm[i];
+}
+
+
+
 } // namespace ns3

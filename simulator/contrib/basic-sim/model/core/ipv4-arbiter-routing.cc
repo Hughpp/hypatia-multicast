@@ -213,66 +213,12 @@ namespace ns3 {
 
         // Multicast logic
         if (ipHeader.GetDestination().IsMulticast()) {
-            //get bs
-            uint32_t unknownsz = 24; //unknown = udp(8) + id(8) + seq(8),bs len = 16 bytes
-            uint32_t shift = unknownsz/4; //first 16 byte is not belong to inputIdSeq
-            uint32_t bs[20];
-            p->CopyData((uint8_t *)bs, unknownsz+16);
-            for(uint32_t i = 0; i < 4; i++){
-                std::cout << bs[shift+i] << std::endl;
+            if (ipHeader.GetDestination().Get() <= 0xe8ffffff) { //bier multicast, recognized by dst address
+                //start from 0xe9000000 to 0xefffffff
+                return BIERMulticastForward(p, ipHeader, ucb, mcb, lcb, iif);
             }
-            // IdSeqHeader inputIdSeq;
-            // p->PeekHeader (inputIdSeq);
-            // std::cout << inputIdSeq.GetId() << std::endl;
-            // std::cout << inputIdSeq.GetSeq() << std::endl;
-            // uint32_t* bier_bs = inputIdSeq.GetBS();
-            // for(int i = 0; i < 4; ++i){
-            //     std::cout << bier_bs[i] << std::endl;
-            // }
-            std::cout << std::endl;
-
-            // throw std::runtime_error("Multi-cast not supported.");
-            if (ROUTING_PRINT) std::cout << "    >>> + multicast arbiter routing: Get a multicast pkt at " << m_ipv4->GetAddress(1, 0).GetLocal() << std::endl << "          [HEADER]: " << ipHeader << std::endl;
-            if (m_ipv4->IsDestinationAddress (ipHeader.GetDestination (), iif)) {
-                if (ROUTING_PRINT) std::cout << "     >>   multicast arbiter routing: LocalDelivery(lcb) deciding..." << std::endl;
-                if (!lcb.IsNull ()) {
-                    if (ROUTING_PRINT) std::cout << "      > - multicast arbiter routing: valid lcb, pkt passed to app." << std::endl;
-                    NS_LOG_LOGIC ("Local delivery to " << ipHeader.GetDestination ());
-                    Ptr<Packet> packetCopy = p->Copy ();
-                    lcb (packetCopy, ipHeader, iif);
-                    // return true; should not return, possibly lcb + mcb
-                }
-                else {
-                    // The local delivery callback is null.  This may be a multicast
-                    // or broadcast packet, so return false so that another
-                    // multicast routing protocol can handle it.  It should be possible
-                    // to extend this to explicitly check whether it is a unicast
-                    // packet, and invoke the error callback if so
-                    if (ROUTING_PRINT) std::cout << "      >   multicast arbiter routing: null lcb" << std::endl;
-                    // return false;
-                }
-            }    
-            NS_LOG_LOGIC ("ByLul-Multicast destination");
-            Ptr<Ipv4MulticastRoute> mrtentry = LookupArbiter(ipHeader.GetDestination (), ipHeader.GetSource(), ipHeader, p, iif); 
-            if (ROUTING_PRINT) std::cout << "     >>   multicast arbiter routing: MulticastForwarding(mcb) deciding..." << std::endl;
-            if (mrtentry){
-                NS_LOG_LOGIC ("ByLul-Multicast route found");
-                //print start
-                if (ROUTING_PRINT) {
-                    std::cout << "      > - multicast arbiter routing: route found, pkt passed to output interfaces." << std::endl;
-                    std::cout << "          [ENTRY]: in_if=" << mrtentry->GetParent() << " src_addr=" << mrtentry->GetOrigin() << " dest_addr=" << mrtentry->GetGroup() << std::endl << "                    ";
-                    for(auto it : mrtentry->GetOutputTtlMap()){
-                        std::cout << "out_if:" << it.first << " ttl=" << it.second << "; ";
-                    }
-                    std::cout << std::endl << std::endl;
-                }
-                //print end
-                mcb (mrtentry, p, ipHeader); // multicast forwarding callback
-                return true;
-            }
-            else{
-                if (ROUTING_PRINT) std::cout << "      >   multicast arbiter routing: multicast route not found." << std::endl << std::endl;
-                return false; // Let other routing protocols try to handle this
+            else { //normal ip multicast
+                return Ipv4MulticastForward(p, ipHeader, mcb, lcb, iif);
             }
         }
 
@@ -394,6 +340,124 @@ namespace ns3 {
     Ptr<Arbiter>
     Ipv4ArbiterRouting::GetArbiter () {
         return m_arbiter;
+    }
+
+    bool Ipv4ArbiterRouting::Ipv4MulticastForward(Ptr<const Packet> p, const Ipv4Header &ipHeader,
+                                            MulticastForwardCallback mcb, LocalDeliverCallback lcb, uint32_t iif) {
+        // throw std::runtime_error("Multi-cast not supported.");
+        if (ROUTING_PRINT) std::cout << "    >>> + multicast arbiter routing: Get a multicast pkt at " << m_ipv4->GetAddress(1, 0).GetLocal() << std::endl << "          [HEADER]: " << ipHeader << std::endl;
+        if (m_ipv4->IsDestinationAddress (ipHeader.GetDestination (), iif)) {
+            // always true for multicast, but app drops if not match
+            // std::cout << "     >>   m_ipv4->IsDestinationAddress (ipHeader.GetDestination (), iif) == True" << std::endl;
+            if (ROUTING_PRINT) std::cout << "     >>   multicast arbiter routing: LocalDelivery(lcb) deciding..." << std::endl;
+            if (!lcb.IsNull ()) {
+                if (ROUTING_PRINT) std::cout << "      > - multicast arbiter routing: valid lcb, pkt passed to app." << std::endl;
+                NS_LOG_LOGIC ("Local delivery to " << ipHeader.GetDestination ());
+                Ptr<Packet> packetCopy = p->Copy ();
+                lcb (packetCopy, ipHeader, iif);
+                // return true; should not return, possibly lcb + mcb
+            }
+            else {
+                // The local delivery callback is null.  This may be a multicast
+                // or broadcast packet, so return false so that another
+                // multicast routing protocol can handle it.  It should be possible
+                // to extend this to explicitly check whether it is a unicast
+                // packet, and invoke the error callback if so
+                if (ROUTING_PRINT) std::cout << "      >   multicast arbiter routing: null lcb" << std::endl;
+                // return false;
+            }
+        }    
+        NS_LOG_LOGIC ("ByLul-Multicast destination");
+        Ptr<Ipv4MulticastRoute> mrtentry = LookupArbiter(ipHeader.GetDestination (), ipHeader.GetSource(), ipHeader, p, iif); 
+        if (ROUTING_PRINT) std::cout << "     >>   multicast arbiter routing: MulticastForwarding(mcb) deciding..." << std::endl;
+        if (mrtentry){
+            NS_LOG_LOGIC ("ByLul-Multicast route found");
+            //print start
+            if (ROUTING_PRINT) {
+                std::cout << "      > - multicast arbiter routing: route found, pkt passed to output interfaces." << std::endl;
+                std::cout << "          [ENTRY]: in_if=" << mrtentry->GetParent() << " src_addr=" << mrtentry->GetOrigin() << " dest_addr=" << mrtentry->GetGroup() << std::endl << "                    ";
+                for(auto it : mrtentry->GetOutputTtlMap()){
+                    std::cout << "out_if:" << it.first << " ttl=" << it.second << "; ";
+                }
+                std::cout << std::endl << std::endl;
+            }
+            //print end
+            
+            mcb (mrtentry, p, ipHeader); // multicast forwarding callback
+            return true;
+        }
+        else{
+            if (ROUTING_PRINT) std::cout << "      >   multicast arbiter routing: multicast route not found." << std::endl << std::endl;
+            return false; // Let other routing protocols try to handle this
+        }
+    }
+
+    bool Ipv4ArbiterRouting::BIERMulticastForward(Ptr<const Packet> p, const Ipv4Header &ipHeader,
+                                            UnicastForwardCallback ucb, MulticastForwardCallback mcb, LocalDeliverCallback lcb, uint32_t iif) {
+        //get bs
+        // uint32_t unknownsz = 24; //unknown = udp(8) + id(8) + seq(8),bs len = 16 bytes
+        // uint32_t shift = unknownsz/4; //first 16 byte is not belong to inputIdSeq
+        // uint32_t bs[20];
+        // p->CopyData((uint8_t *)bs, unknownsz+16);
+        // for(uint32_t i = 0; i < 4; i++){
+        //     uint32_t bs_part = bs[shift+i]; //current bs part
+        //     uint32_t bp_shift = i * 32; //bp shift
+        //     while (bs_part > 0) {
+
+        //     }
+
+        //     std::cout << bs[shift+i] << std::endl;
+        // }
+
+        //modify packet
+        Ptr<Packet> packetCopy = p->Copy ();
+        //parse bs
+        UdpHeader udpheader;
+        IdSeqBIERHeader isbheader;
+        uint32_t* bs;
+        std::cout << "remove header" << std::endl;
+        packetCopy->RemoveHeader(udpheader);
+        packetCopy->RemoveHeader(isbheader);
+        bs = isbheader.GetBS();
+        //check current node
+        Ptr<ArbiterMulticast> tmp_p = DynamicCast<ArbiterMulticast>(m_arbiter);
+        if (!tmp_p) throw std::runtime_error("NULL ArbiterMulticast pointer");;
+        uint32_t selfbp = tmp_p->GetBpFromNodeID(m_nodeId);
+        if (isbheader.TestBP(selfbp)) {
+            //local delivery
+            lcb (p, ipHeader, iif);
+            isbheader.SetBP(selfbp, 0); //set to zero
+        }
+
+        //check other dst
+        for (int i = 0; i < BS_LEN_32; ++i) {
+            uint32_t bs_part = bs[i]; //get bs part
+            while (bs_part) {
+                int last_active_posi = ffs((int)bs_part)-1; //return value of ffs starts from 1 but BP starts from 0
+                std::cout << "active BP: " << 32*i+last_active_posi << std::endl;
+                bs_part &= ~(1 << (last_active_posi));
+            }
+        }
+        std::cout << "add header" << std::endl;
+        packetCopy->AddHeader(isbheader);
+        packetCopy->AddHeader(udpheader);
+        // steps of BIER forwarding:
+        //get bs of the packet
+        //
+
+        //input bs to get routing result
+
+        
+        // IdSeqHeader inputIdSeq;
+        // p->PeekHeader (inputIdSeq);
+        // std::cout << inputIdSeq.GetId() << std::endl;
+        // std::cout << inputIdSeq.GetSeq() << std::endl;
+        // uint32_t* bier_bs = inputIdSeq.GetBS();
+        // for(int i = 0; i < 4; ++i){
+        //     std::cout << bier_bs[i] << std::endl;
+        // }
+        std::cout << std::endl;
+        return true;
     }
 
 } // namespace ns3

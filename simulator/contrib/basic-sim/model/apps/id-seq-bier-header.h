@@ -20,6 +20,7 @@
  * Author: Mathieu Lacage <mathieu.lacage@sophia.inria.fr>
  */
 
+//all bier related struct
 #ifndef ID_SEQ_BIER_HEADER_H
 #define ID_SEQ_BIER_HEADER_H
 #define BS_LEN_32 4 
@@ -58,6 +59,48 @@ private:
   // std::bitset<128> m_bier_bs;// = {0}; // used by BIER, init as 0
 };
 
+class BIERTableEntry
+{
+public:
+    BIERTableEntry(uint32_t dst_id, uint32_t fbm[BS_LEN_32], uint32_t nexthop);
+    uint32_t GetDstid();
+    uint32_t* GetFbm();
+    uint32_t GetNexthop();
+    void BitwiseAndWith(uint32_t tarbs[BS_LEN_32]);
+
+private:
+    uint32_t m_dst_id;
+    uint32_t m_fbm[BS_LEN_32];
+    uint32_t m_nexthop;
+
+};
+
 } // namespace ns3
+
+namespace bsOpera {
+
+void BSAnd(uint32_t res[BS_LEN_32], uint32_t a[BS_LEN_32], uint32_t b[BS_LEN_32]) {
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    res[i] = a[i] & b[i];
+  }  
+}
+
+void BSXor(uint32_t res[BS_LEN_32], uint32_t a[BS_LEN_32], uint32_t b[BS_LEN_32]) {
+  //used for bs update
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    res[i] = a[i] ^ b[i];
+  }  
+}
+
+bool BSEqualZero(uint32_t bs[BS_LEN_32]) {
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    if (bs[i] > 0) {
+      return false;
+    } 
+  }
+  return true;
+}
+
+} // namespace bsOpera
 
 #endif /* ID_SEQ_BIER_HEADER_H */

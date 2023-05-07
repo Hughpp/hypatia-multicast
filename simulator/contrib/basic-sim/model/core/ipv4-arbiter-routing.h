@@ -24,6 +24,7 @@
 #include <list>
 #include <utility>
 #include <stdint.h>
+#include <string.h>
 #include "ns3/ipv4-address.h"
 #include "ns3/ipv4-header.h"
 #include "ns3/socket.h"
@@ -31,9 +32,11 @@
 #include "ns3/ipv4.h"
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/arbiter.h"
+#include "ns3/arbiter-multicast.h"
 #include "ns3/point-to-point-net-device.h"
 #include "ns3/point-to-point-channel.h"
 #include "ns3/id-seq-header.h"
+#include "ns3/id-seq-bier-header.h"
 #include "ns3/udp-header.h"
 
 namespace ns3 {
@@ -106,6 +109,9 @@ private:
     Ptr<Ipv4> m_ipv4;
     Ptr<Ipv4Route> LookupArbiter (const Ipv4Address& dest, const Ipv4Header &header, Ptr<const Packet> p, Ptr<NetDevice> oif = 0);
     Ptr<Ipv4MulticastRoute> LookupArbiter (Ipv4Address dest, Ipv4Address src, const Ipv4Header &header, Ptr<const Packet> p, uint32_t input_if_idx);
+    Ptr<Ipv4MulticastRoute> LookupArbiterBIER (Ipv4Address dest, Ipv4Address src, const Ipv4Header &header, Ptr<const Packet> p, uint32_t input_if_idx);
+    bool Ipv4MulticastForward(Ptr<const Packet> p, const Ipv4Header &ipHeader, MulticastForwardCallback mcb, LocalDeliverCallback lcb, uint32_t iif); 
+    bool BIERMulticastForward(Ptr<const Packet> p, const Ipv4Header &ipHeader, UnicastForwardCallback ucb, MulticastForwardCallback mcb, LocalDeliverCallback lcb, uint32_t iif); 
     Ptr<Arbiter> m_arbiter = 0;
     Ipv4Address m_nodeSingleIpAddress;
     Ipv4Mask loopbackMask = Ipv4Mask("255.0.0.0");
