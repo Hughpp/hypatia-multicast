@@ -63,8 +63,7 @@ namespace ns3 {
     MulticastUdpApplication::MulticastUdpApplication() {
         NS_LOG_FUNCTION(this);
         m_next_internal_burst_idx = 0;
-        // m_bier = false;
-        m_bier = true;
+        m_bier = USE_BIER;
     }
 
     MulticastUdpApplication::~MulticastUdpApplication() {
@@ -219,11 +218,8 @@ namespace ns3 {
             IdSeqBIERHeader idSeq;
             idSeq.SetId(std::get<0>(m_outgoing_bursts[internal_burst_idx]).GetUdpBurstId());
             idSeq.SetSeq(m_outgoing_bursts_packets_sent_counter[internal_burst_idx]);
-            //set bp
-            idSeq.SetBP(1,1);
-            idSeq.SetBP(37,1);
-            idSeq.SetBP(90,1);
-            idSeq.SetBP(120,1);
+            //set BS
+            idSeq.SetBS(std::get<0>(m_outgoing_bursts[internal_burst_idx]).GetBS()); //set BS
             // One more packet will be sent out
             m_outgoing_bursts_packets_sent_counter[internal_burst_idx] += 1;
 

@@ -20,6 +20,7 @@ namespace ns3 {
         m_duration_ns = duration_ns;
         m_additional_parameters = additional_parameters;
         m_metadata = metadata;
+        bsOpera::BSreset(m_bs);
     }
 
     int64_t MulticastUdpInfo::GetUdpBurstId() const {
@@ -62,6 +63,14 @@ namespace ns3 {
         m_multicast_group = multicast_group;
     }
 
+    void MulticastUdpInfo::SetBS(uint32_t* bs) {
+        for (int i = 0; i < BS_LEN_32; ++i) m_bs[i] = bs[i];
+    }
+
+    uint32_t* MulticastUdpInfo::GetBS() {
+        return m_bs;
+    }
+
     /**
      * Read in the UDP burst schedule.
      *
@@ -72,8 +81,15 @@ namespace ns3 {
     std::vector<MulticastUdpInfo> read_multicast_udp_schedule(const std::string& filename, Ptr<Topology> topology, const int64_t simulation_end_time_ns) {
 
         // Schedule to put in the data
-        std::vector<MulticastUdpInfo> schedule;
+        std::vector<MulticastUdpInfo> schedule; 
         Ipv4Address multicast_group_base = topology->GetMulticastGroupBase();
+        // if (USE_BIER) { //different group base
+        //     multicast_group_base = topology->GetMulticastBIERBase();
+        // }
+        // else {
+        //     multicast_group_base = topology->GetMulticastGroupBase();
+        // }
+        
 
         // Check that the file exists
         if (!file_exists(filename)) {
@@ -153,13 +169,27 @@ namespace ns3 {
                 // Put into schedule
                 MulticastUdpInfo entry = MulticastUdpInfo(udp_burst_id, from_node_id, to_node_ids, target_rate_megabit_per_s, start_time_ns, duration_ns, additional_parameters, metadata);
                 entry.SetMulticastGroup(multicast_group);
-                schedule.push_back(entry);
                 //check if correct
                 std::cout << "   Add a multicast udp flow: id " << entry.GetUdpBurstId() << " multicast_group " << entry.GetMulticastGroup() << " src " << entry.GetFromNodeId() << " dsts ";
                 for (int64_t dst :to_node_ids){
                     std::cout << dst << ",";
                 }
+                //check bier
+                if (USE_BIER) {
+                    uint32_t bs[BS_LEN_32] = {0,0,0,0};
+                    for (int64_t dst :to_node_ids) {
+                        int bp = topology->NodeidToBP((uint32_t) dst); //get bp
+                        bsOpera::BSset(bs, bp, true); //set tar bp
+                    }
+                    entry.SetBS(bs); //set to entry
+                    std::cout << "  using BIER, BS: " ;
+                    for (auto bs_part :bs){
+                        std::cout << bs_part << ",";
+                    }
+                }
                 std::cout << std::endl;
+                //add to schedule
+                schedule.push_back(entry);
 
                 // Next line
                 line_counter++;

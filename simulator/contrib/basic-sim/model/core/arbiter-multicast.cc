@@ -142,10 +142,6 @@ ArbiterResult ArbiterMulticast::DecideMulticast(int32_t source_node_id, Ptr<cons
     //     }
     // }
     // return ArbiterResult(true, 0, 0);
-};
-
-uint32_t ArbiterMulticast::GetBpFromNodeID(uint32_t node_id) {
-    return 0;
 }
 
 }

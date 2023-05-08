@@ -98,5 +98,9 @@ ArbiterResult ArbiterSatMulticast::DecideMulticast(int32_t source_node_id, Ptr<c
     return ArbiterResult(true, 0, 0);
 }
 
+uint32_t ArbiterSatMulticast::GetBpFromNodeID(uint32_t node_id) {
+    return 1000;
+}
+
 }
 

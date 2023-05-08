@@ -66,6 +66,10 @@ IdSeqBIERHeader::SetBP(uint32_t bitposi, uint8_t content) //set to 0 or 1
   }
 } 
 
+void IdSeqBIERHeader::SetBS(uint32_t* bs) {
+  bsOpera::BScopy(m_bier_bs, bs);
+}
+
 bool 
 IdSeqBIERHeader::TestBP(uint32_t bitposi) //if it is 1
 {
@@ -152,14 +156,19 @@ IdSeqBIERHeader::Deserialize (Buffer::Iterator start)
   return GetSerializedSize ();
 }
 
-BIERTableEntry::BIERTableEntry(uint32_t dst_id, uint32_t fbm[BS_LEN_32], uint32_t nexthop) {
-    m_dst_id = dst_id;
+BIERTableEntry::BIERTableEntry(uint32_t bfer_id, uint32_t node_id, uint32_t fbm[BS_LEN_32], uint32_t nexthop) {
+    m_bfer_id = bfer_id;
+    m_node_id = node_id;
     for (int i = 0; i < BS_LEN_32; ++i) m_fbm[i] = fbm[i];
     m_nexthop = nexthop;
 }
 
-uint32_t BIERTableEntry::GetDstid(){
-    return m_dst_id;
+uint32_t BIERTableEntry::GetBFERid() {
+  return m_bfer_id;
+}
+
+uint32_t BIERTableEntry::GetNodeid() {
+  return m_node_id;
 }
 
 uint32_t* BIERTableEntry::GetFbm(){
@@ -177,3 +186,64 @@ void BIERTableEntry::BitwiseAndWith(uint32_t tarbs[BS_LEN_32]){
 
 
 } // namespace ns3
+
+
+namespace bsOpera {
+
+void BScopy(uint32_t tar[BS_LEN_32], uint32_t src[BS_LEN_32]) {
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    tar[i] = src[i];
+  }  
+}
+
+void BSset(uint32_t tar[BS_LEN_32], int posi, bool active) {
+  NS_ASSERT(0 <= posi && posi < 32*BS_LEN_32);
+  int uintposi = posi/32; //array index
+  int bitwithshift = posi%32;
+  if (!active) {
+    tar[uintposi] &= ~(1 << bitwithshift); //set to 0
+  }
+  else {
+    tar[uintposi] |= 1 << bitwithshift; //set to 1
+  }
+}
+
+void BSreset(uint32_t tar[BS_LEN_32]) {
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    tar[i] = 0;
+  } 
+}
+
+void BSAnd(uint32_t res[BS_LEN_32], uint32_t a[BS_LEN_32], uint32_t b[BS_LEN_32]) {
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    res[i] = a[i] & b[i];
+  }  
+}
+
+void BSXor(uint32_t res[BS_LEN_32], uint32_t a[BS_LEN_32], uint32_t b[BS_LEN_32]) {
+  //used for bs update
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    res[i] = a[i] ^ b[i];
+  }  
+}
+
+bool BSEqualZero(uint32_t bs[BS_LEN_32]) {
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    if (bs[i] > 0) {
+      return false;
+    } 
+  }
+  return true;
+}
+
+int BSFindLeastActive(uint32_t bs[BS_LEN_32]) {
+  for (int i = 0; i < BS_LEN_32; ++i) {
+      uint32_t bs_part = bs[i]; //get bs part
+      if (bs_part > 0) {
+        return ffs((int)bs_part)-1;
+      }
+  }
+  return -1; //failed
+}
+
+}

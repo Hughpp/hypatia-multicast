@@ -101,6 +101,10 @@ ArbiterResult Arbiter::DecideMulticast(int32_t source_node_id, Ptr<const Packet>
     throw std::runtime_error("Multicast not supported in this arbiter");
 }
 
+uint32_t Arbiter::GetBpFromNodeID(uint32_t node_id) {
+    throw std::runtime_error("BIER not supported in this arbiter");
+}
+
 ArbiterResult Arbiter::BaseDecide(Ptr<const Packet> pkt, Ipv4Header const &ipHeader) {
     //handle src
     // Retrieve the source node id

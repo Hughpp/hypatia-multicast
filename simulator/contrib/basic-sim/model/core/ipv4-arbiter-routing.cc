@@ -213,7 +213,7 @@ namespace ns3 {
 
         // Multicast logic
         if (ipHeader.GetDestination().IsMulticast()) {
-            if (ipHeader.GetDestination().Get() <= 0xe8ffffff) { //bier multicast, recognized by dst address
+            if (ipHeader.GetDestination().Get() > 0xe8ffffff) { //bier multicast, recognized by dst address
                 //start from 0xe9000000 to 0xefffffff
                 return BIERMulticastForward(p, ipHeader, ucb, mcb, lcb, iif);
             }
@@ -337,6 +337,10 @@ namespace ns3 {
         m_arbiter = arbiter;
     }
 
+    void Ipv4ArbiterRouting::SetBP(int bp) {
+        m_bp = bp;
+    }
+
     Ptr<Arbiter>
     Ipv4ArbiterRouting::GetArbiter () {
         return m_arbiter;
@@ -414,33 +418,50 @@ namespace ns3 {
         //parse bs
         UdpHeader udpheader;
         IdSeqBIERHeader isbheader;
-        uint32_t* bs;
-        std::cout << "remove header" << std::endl;
+        // std::cout << "remove header" << std::endl;
         packetCopy->RemoveHeader(udpheader);
         packetCopy->RemoveHeader(isbheader);
-        bs = isbheader.GetBS();
         //check current node
-        Ptr<ArbiterMulticast> tmp_p = DynamicCast<ArbiterMulticast>(m_arbiter);
-        if (!tmp_p) throw std::runtime_error("NULL ArbiterMulticast pointer");;
-        uint32_t selfbp = tmp_p->GetBpFromNodeID(m_nodeId);
-        if (isbheader.TestBP(selfbp)) {
-            //local delivery
+        std::cout << "self BP: " << m_bp << std::endl;
+        if (m_bp >= 0 && isbheader.TestBP(m_bp)) {//local delivery
             lcb (p, ipHeader, iif);
-            isbheader.SetBP(selfbp, 0); //set to zero
+            isbheader.SetBP(m_bp, 0); //set to zero
         }
 
         //check other dst
-        for (int i = 0; i < BS_LEN_32; ++i) {
-            uint32_t bs_part = bs[i]; //get bs part
-            while (bs_part) {
-                int last_active_posi = ffs((int)bs_part)-1; //return value of ffs starts from 1 but BP starts from 0
-                std::cout << "active BP: " << 32*i+last_active_posi << std::endl;
-                bs_part &= ~(1 << (last_active_posi));
-            }
+        uint32_t* bs = isbheader.GetBS();
+        uint32_t bs_toforward[BS_LEN_32];
+        while (!bsOpera::BSEqualZero(bs)) {
+            int active_bp = bsOpera::BSFindLeastActive(bs);
+            BIERTableEntry bier_entry = 0;//LookupBIERTable(active_bp);
+            uint32_t nexthop = bier_entry.GetNexthop();
+            uint32_t* fbm = bier_entry.GetFbm();
+            //proc bs
+            bsOpera::BSAnd(bs_toforward, fbm, bs);
+            bsOpera::BSXor(bs, bs_toforward, bs);
+            //construct pkt
+            isbheader.SetBS(bs_toforward);
+            Ptr<Packet> tmp = packetCopy->Copy();
+            tmp->AddHeader(isbheader);
+            tmp->AddHeader(udpheader);
+            //construct route
+            Ptr<Ipv4Route> route = 0;
+            //forward
+            ucb(route, tmp, ipHeader);
         }
-        std::cout << "add header" << std::endl;
-        packetCopy->AddHeader(isbheader);
-        packetCopy->AddHeader(udpheader);
+        // for (int i = 0; i < BS_LEN_32; ++i) {
+        //     uint32_t bs_part = bs[i]; //get bs part
+        //     // std::cout << bs_part << std::endl;
+        //     while (bs_part) {
+        //         int last_active_posi = ffs((int)bs_part)-1; //return value of ffs starts from 1 but BP starts from 0
+        //         std::cout << "active BP: " << 32*i+last_active_posi << std::endl;
+        //         bs_part &= ~(1 << (last_active_posi));
+        //     }
+        // }
+        // std::cout << "add header" << std::endl;
+        // packetCopy->AddHeader(isbheader);
+        // packetCopy->AddHeader(udpheader);
+        
         // steps of BIER forwarding:
         //get bs of the packet
         //

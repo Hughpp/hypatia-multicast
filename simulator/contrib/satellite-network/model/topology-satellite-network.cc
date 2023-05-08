@@ -546,9 +546,18 @@ namespace ns3 {
     bool TopologySatelliteNetwork::IsValidEndpoint(int64_t node_id) {
         return m_endpoints.find(node_id) != m_endpoints.end();
     }
+    
+    int TopologySatelliteNetwork::NodeidToBP(uint32_t node_id) {
+        if (node_id < m_satelliteNodes.GetN()) {
+            return -1; //inlegel bp, e.g., satellite
+        }
+        return (int)(node_id - m_satelliteNodes.GetN());
+    }
 
     const std::set<int64_t>& TopologySatelliteNetwork::GetEndpoints() {
         return m_endpoints;
     }
+
+
 
 }

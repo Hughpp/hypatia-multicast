@@ -84,6 +84,10 @@ namespace ns3 {
         uint32_t NodeToGroundStationId(uint32_t node_id);
         bool IsSatelliteId(uint32_t node_id);
         bool IsGroundStationId(uint32_t node_id);
+        
+        //BIER 
+        int NodeidToBP(uint32_t node_id);
+        // int NodeidToBP(uint32_t node_id);
 
         // Post-processing
         void CollectUtilizationStatistics();

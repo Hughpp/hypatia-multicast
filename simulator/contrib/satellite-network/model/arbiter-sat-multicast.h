@@ -29,6 +29,7 @@
 #include "ns3/ipv4-header.h"
 #include "ns3/udp-header.h"
 #include "ns3/tcp-header.h"
+#include "ns3/id-seq-bier-header.h"
 
 namespace ns3 {
 
@@ -50,12 +51,17 @@ public:
     void ClearMulticastRoutes();
     // std::vector<std::tuple<int32_t, int32_t, int32_t>> GetNextHopList();
     ArbiterResult DecideMulticast(int32_t source_node_id, Ptr<const Packet> pkt, Ipv4Header const &ipHeader);
-
+    
     // Static routing table
     // std::string StringReprOfForwardingState();
 
+    //bier
+    uint32_t GetBpFromNodeID(uint32_t node_id);
+
 private:
     std::list<Ipv4MulticastRoutingTableEntry *> m_multicast_routes;
+    std::list<BIERTableEntry *> m_bier_table;
+    std::map<uint32_t, uint32_t> m_node_id_to_bp;
 };
 
 }

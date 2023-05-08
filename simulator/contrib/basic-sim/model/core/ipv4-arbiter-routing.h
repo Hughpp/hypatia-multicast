@@ -33,6 +33,7 @@
 #include "ns3/ipv4-routing-protocol.h"
 #include "ns3/arbiter.h"
 #include "ns3/arbiter-multicast.h"
+#include "ns3/arbiter-sat-multicast.h"
 #include "ns3/point-to-point-net-device.h"
 #include "ns3/point-to-point-channel.h"
 #include "ns3/id-seq-header.h"
@@ -104,6 +105,8 @@ public:
   virtual void SetIpv4 (Ptr<Ipv4> ipv4);
   void SetArbiter (Ptr<Arbiter> arbiter);
   Ptr<Arbiter> GetArbiter ();
+  //bier
+  void SetBP(int bp);
 
 private:
     Ptr<Ipv4> m_ipv4;
@@ -117,6 +120,7 @@ private:
     Ipv4Mask loopbackMask = Ipv4Mask("255.0.0.0");
     Ipv4Address loopbackIp = Ipv4Address("127.0.0.1");
     uint32_t m_nodeId;
+    int m_bp;
 
 };
 

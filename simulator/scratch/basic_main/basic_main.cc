@@ -24,7 +24,18 @@
 #include "ns3/ptop-link-utilization-tracker-helper.h"
 #include "ns3/ptop-link-queue-tracker-helper.h"
 #include "ns3/arbiter-multicast-helper.h"
-// #include "ns3/ptop-queue-utilization-tracker-helper.h"
+
+#include "ns3/basic-simulation.h"
+#include "ns3/tcp-flow-scheduler.h"
+#include "ns3/udp-burst-scheduler.h"
+#include "ns3/pingmesh-scheduler.h"
+#include "ns3/tcp-optimizer.h"
+#include "ns3/ipv4-arbiter-routing-helper.h"
+
+//new header from satellite-network
+#include "ns3/topology-satellite-network.h"
+#include "ns3/arbiter-single-forward-helper.h"
+#include "ns3/gsl-if-bandwidth-helper.h"
 
 using namespace ns3;
 

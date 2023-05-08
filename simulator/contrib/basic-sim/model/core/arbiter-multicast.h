@@ -12,9 +12,10 @@
 #include "ns3/id-seq-bier-header.h"
 // #include "ns3/ipv4-routing-protocol.h"
 
+
+//cannot be used by sat multicast
 namespace ns3 {
 class Ipv4MulticastRoutingTableEntry;
-class BIERTableEntry;
 
 class ArbiterMulticast : public ArbiterEcmp
 {
@@ -34,17 +35,11 @@ public:
     void SetMulticastRoutes(std::list<Ipv4MulticastRoutingTableEntry *> multicast_routes);
     ArbiterResult DecideMulticast(int32_t source_node_id, Ptr<const Packet> pkt, Ipv4Header const &ipHeader);
 
-    //used by bier
-    uint32_t GetBpFromNodeID(uint32_t node_id);
-
     // get routing table
     // std::string StringReprOfForwardingState();
 
 private:
     std::list<Ipv4MulticastRoutingTableEntry *> m_multicast_routes;
-    std::list<BIERTableEntry *> m_bier_table;
-    std::map<uint32_t, uint32_t> m_node_id_to_bp;
-
 };
 
 }

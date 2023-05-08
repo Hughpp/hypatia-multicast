@@ -14,6 +14,8 @@
 
 #include "ns3/exp-util.h"
 #include "ns3/topology.h"
+#include "ns3/topology-satellite-network.h"
+#include "ns3/id-seq-bier-header.h"
 
 namespace ns3 {
 
@@ -42,6 +44,9 @@ namespace ns3 {
         std::string GetMetadata();
         Ipv4Address GetMulticastGroup();
         void SetMulticastGroup(Ipv4Address multicast_group);
+        //bier
+        void SetBS(uint32_t* bs);
+        uint32_t* GetBS();
     private:
         int64_t m_udp_burst_id;
         int64_t m_from_node_id;
@@ -53,6 +58,8 @@ namespace ns3 {
         std::string m_additional_parameters;
         std::string m_metadata;
         Ipv4Address m_multicast_group;
+        //bier
+        uint32_t m_bs[BS_LEN_32];
     };
 
     std::vector<MulticastUdpInfo> read_multicast_udp_schedule(

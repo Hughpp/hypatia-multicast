@@ -22,6 +22,7 @@ namespace ns3 {
             Ptr<ArbiterSatMulticast> arbiter = CreateObject<ArbiterSatMulticast>(m_nodes.Get(i), m_nodes, m_globalForwardingState[i]);
             m_arbiters.push_back(arbiter);
             m_nodes.Get(i)->GetObject<Ipv4>()->GetRoutingProtocol()->GetObject<Ipv4ArbiterRouting>()->SetArbiter(arbiter);
+            m_nodes.Get(i)->GetObject<Ipv4>()->GetRoutingProtocol()->GetObject<Ipv4ArbiterRouting>()->SetBP(topology->NodeidToBP((uint32_t)i));
         }
         basicSimulation->RegisterTimestamp("Setup sat-multicast-arbiter on each node");
 
