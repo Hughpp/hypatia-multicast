@@ -98,8 +98,34 @@ ArbiterResult ArbiterSatMulticast::DecideMulticast(int32_t source_node_id, Ptr<c
     return ArbiterResult(true, 0, 0);
 }
 
-uint32_t ArbiterSatMulticast::GetBpFromNodeID(uint32_t node_id) {
-    return 1000;
+// uint32_t ArbiterSatMulticast::GetBpFromNodeID(uint32_t node_id) {
+//     return 1000;
+// }
+
+BIERTableEntry& ArbiterSatMulticast::LookupBIERTable(int bp) {
+    for (auto i = m_bier_table.begin (); i != m_bier_table.end (); i++) {
+        BIERTableEntry *route = *i;
+        if(route->GetBFERBP() == bp) { //find the same bp
+            return *route;
+        }
+    }
+    throw std::runtime_error("ArbiterSatMulticast::BIER table lookup failed");
+}
+
+void ArbiterSatMulticast::ClearBIERRoutes() {
+    m_bier_table.clear();
+}
+
+void ArbiterSatMulticast::AddBIERRoute(int bfer_bp, uint32_t fbm[BS_LEN_32], int nexthop_bp, uint32_t bfer_id, uint32_t oifidx, uint32_t bfer_addr, uint32_t nxthop_addr) {
+    // //print mutlicast route
+    // std::cout << " > Adding a multicast route for node " << ArbiterSatMulticast::m_node_id;
+    // std::cout << "  >>> " << origin << " " << group << " " << inputInterface << " outputIf:";
+    // for(int32_t oif: outputInterfaces){
+    //     std::cout << " " << oif;
+    // }
+    // std::cout << std::endl;
+    BIERTableEntry *route = new BIERTableEntry(bfer_bp, fbm, nexthop_bp, bfer_id, oifidx, bfer_addr, nxthop_addr);
+    m_bier_table.push_back(route);
 }
 
 }

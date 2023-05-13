@@ -74,7 +74,7 @@ namespace ns3 {
 
         // Multi-cast not supported 224.0.0.0/24
         if (dest.IsLocalMulticast()) {
-            // throw std::runtime_error("Multi-cast is not supported");
+            throw std::runtime_error("Multicast is not supported by Ptr<Ipv4Route> LookupArbiter");
             // link local is only for local network segment comm
             Ptr<Ipv4Route> rtentry = 0;
             NS_ASSERT_MSG (oif, "Try to send on link-local multicast address, and no interface index is given!");
@@ -422,62 +422,61 @@ namespace ns3 {
         packetCopy->RemoveHeader(udpheader);
         packetCopy->RemoveHeader(isbheader);
         //check current node
-        std::cout << "self BP: " << m_bp << std::endl;
+        //local delivery unused because satellites are seen as BFRs only (not BFER, only ground stations are BFERs)
+        // std::cout << "self BP: " << m_bp << std::endl;
         if (m_bp >= 0 && isbheader.TestBP(m_bp)) {//local delivery
             lcb (p, ipHeader, iif);
             isbheader.SetBP(m_bp, 0); //set to zero
         }
 
         //check other dst
-        uint32_t* bs = isbheader.GetBS();
-        uint32_t bs_toforward[BS_LEN_32];
+        uint32_t* header_bs = isbheader.GetBS();
+        uint32_t bs[BS_LEN_32], bs_toforward[BS_LEN_32];
+        bsOpera::BScopy(bs, header_bs);
+        int ports_limit = 0;
         while (!bsOpera::BSEqualZero(bs)) {
-            int active_bp = bsOpera::BSFindLeastActive(bs);
-            BIERTableEntry bier_entry = 0;//LookupBIERTable(active_bp);
-            uint32_t nexthop = bier_entry.GetNexthop();
+            // std::cout << "Before and" << std::endl;
+            // bsOpera::BSPrint(bs);
+            ++ports_limit;
+            if (ports_limit > 200) {
+                throw std::runtime_error("BIER BS resolve at a router exceeds the upper bound 200 times");
+            }
+            int active_bp = bsOpera::BSFindLeastActive(bs); //get next bp
+            BIERTableEntry bier_entry = m_arbiter->LookupBIERTable(active_bp); //look up table
+            // uint32_t nexthop = bier_entry.GetNexthop();
             uint32_t* fbm = bier_entry.GetFbm();
             //proc bs
             bsOpera::BSAnd(bs_toforward, fbm, bs);
+            // std::cout << "After and" << std::endl;
+            // bsOpera::BSPrint(bs_toforward);
+            // bsOpera::BSPrint(fbm);
+            // bsOpera::BSPrint(bs);
             bsOpera::BSXor(bs, bs_toforward, bs);
+            // std::cout << "After xor" << std::endl;
+            // bsOpera::BSPrint(bs_toforward);
+            // bsOpera::BSPrint(fbm);
+            // bsOpera::BSPrint(bs);
             //construct pkt
             isbheader.SetBS(bs_toforward);
             Ptr<Packet> tmp = packetCopy->Copy();
             tmp->AddHeader(isbheader);
             tmp->AddHeader(udpheader);
             //construct route
-            Ptr<Ipv4Route> route = 0;
+            Ptr<Ipv4Route> rtentry = Create<Ipv4Route>();
+            uint32_t nxthop_addr = bier_entry.GetNexthopAddr();
+            uint32_t if_idx = bier_entry.GetOifIdx();
+            Ipv4Address dest = Ipv4Address(nxthop_addr);
+            rtentry->SetDestination(dest);
+            rtentry->SetSource(m_ipv4->SourceAddressSelection(if_idx, dest)); // This is basically the IP of the interface, It is used by a transport layer to determine its source IP address
+            rtentry->SetGateway(Ipv4Address::GetZero ()); // If the network device does not care about ARP resolution, this can be set to 0.0.0.0
+            rtentry->SetOutputDevice(m_ipv4->GetNetDevice(if_idx));
             //forward
-            ucb(route, tmp, ipHeader);
+            ucb(rtentry, tmp, ipHeader);
+
+            // std::cout << "One iter ends" << std::endl;
+            // bsOpera::BSPrint(bs);
         }
-        // for (int i = 0; i < BS_LEN_32; ++i) {
-        //     uint32_t bs_part = bs[i]; //get bs part
-        //     // std::cout << bs_part << std::endl;
-        //     while (bs_part) {
-        //         int last_active_posi = ffs((int)bs_part)-1; //return value of ffs starts from 1 but BP starts from 0
-        //         std::cout << "active BP: " << 32*i+last_active_posi << std::endl;
-        //         bs_part &= ~(1 << (last_active_posi));
-        //     }
-        // }
-        // std::cout << "add header" << std::endl;
-        // packetCopy->AddHeader(isbheader);
-        // packetCopy->AddHeader(udpheader);
-        
-        // steps of BIER forwarding:
-        //get bs of the packet
-        //
-
-        //input bs to get routing result
-
-        
-        // IdSeqHeader inputIdSeq;
-        // p->PeekHeader (inputIdSeq);
-        // std::cout << inputIdSeq.GetId() << std::endl;
-        // std::cout << inputIdSeq.GetSeq() << std::endl;
-        // uint32_t* bier_bs = inputIdSeq.GetBS();
-        // for(int i = 0; i < 4; ++i){
-        //     std::cout << bier_bs[i] << std::endl;
-        // }
-        std::cout << std::endl;
+        std::cout << "      >   proc at node " << m_nodeId << std::endl;
         return true;
     }
 

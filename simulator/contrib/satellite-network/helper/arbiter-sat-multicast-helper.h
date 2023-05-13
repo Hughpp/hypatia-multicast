@@ -30,6 +30,8 @@
 
 #include "ns3/multicast-udp-schedule-reader.h"
 #include "ns3/arbiter-sat-multicast.h"
+//bier
+#include "ns3/id-seq-bier-header.h"
 
 namespace ns3 {
 
@@ -45,6 +47,9 @@ namespace ns3 {
         void UpdateMulticastState(int64_t t);
         void InitialGlobalRoutingState(); //including unicast and multicast
         void UpdateGlobalRoutingState(int64_t t); //including unicast and multicast
+        //BIER
+        void InitialEmptyBIERState();
+        void UpdateBIERState(int64_t t);
 
         Ptr<BasicSimulation> m_basicSimulation;
         NodeContainer m_nodes;

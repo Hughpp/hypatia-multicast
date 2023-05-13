@@ -144,12 +144,88 @@ namespace ns3 {
         }
     }
 
+    void ArbiterSatMulticastHelper::InitialEmptyBIERState() {
+        //left empty
+    }
+
+    void ArbiterSatMulticastHelper::UpdateBIERState(int64_t t) {
+        //update BIER State according to forwarding state
+
+        //first, clear all the old multicast table
+        for (size_t i = 0; i < m_nodes.GetN(); i++) { //ip
+            m_arbiters[i]->ClearBIERRoutes();
+        }
+        
+        //second, add new state
+        std::cout << "  > Calculating BIER route from m_globalForwardingState" << std::endl;
+        NodeContainer sat_nodes = m_topology->GetSatelliteNodes();
+        NodeContainer gs_nodes = m_topology->GetGroundStationNodes();
+        for (auto i = sat_nodes.Begin (); i != sat_nodes.End (); ++i) {
+            Ptr<Node> curp_node = *i;
+            uint32_t src_id = curp_node->GetId();
+            //init oif group and fbm
+            Ptr<Ipv4> curp_ipv4 = curp_node->GetObject<Ipv4>();
+            int num_oif = curp_ipv4->GetNInterfaces();
+            std::vector<uint32_t*> oif_fbm(num_oif);
+            for (int j = 0; j < num_oif; ++j) {
+                oif_fbm[j] = new uint32_t[BS_LEN_32](); //init as 0
+            }
+            //update fbm
+            for (auto j = gs_nodes.Begin (); j != gs_nodes.End (); ++j) {
+                Ptr<Node> dst_node = *j;
+                uint32_t dst_id = dst_node->GetId();
+                std::tuple<int32_t, int32_t, int32_t> nexthop_myif_nxtif = m_globalForwardingState[src_id][dst_id];// get unicast entry
+                int32_t cur_oif_id = std::get<1>(nexthop_myif_nxtif);
+                //update fbm
+                int dst_bp = m_topology->NodeidToBP(dst_id);
+                bsOpera::BSset(oif_fbm[cur_oif_id], dst_bp, true); //set dst to 1
+            }
+
+            //add entry
+            for (auto j = gs_nodes.Begin (); j != gs_nodes.End (); ++j) {
+                Ptr<Node> dst_node = *j;
+                uint32_t dst_id = dst_node->GetId();
+                std::tuple<int32_t, int32_t, int32_t> nexthop_myif_nxtif = m_globalForwardingState[src_id][dst_id];// get unicast entry
+                int32_t cur_oif_id = std::get<1>(nexthop_myif_nxtif);
+                int32_t nxt_hop_id = std::get<0>(nexthop_myif_nxtif); 
+                int32_t nxt_iif_id = std::get<2>(nexthop_myif_nxtif);
+                    // int m_bfer_id;
+                    // uint32_t m_fbm[BS_LEN_32];
+                    // int m_nexthop;
+                    // // extra info
+                    // uint32_t m_node_id;
+                    // uint32_t m_oifidx;
+                    // uint32_t m_bfer_addr;
+                    // uint32_t m_nxthop_addr;
+                //init BIERTableEntry
+                int bfer_bp = m_topology->NodeidToBP(dst_id);
+                uint32_t *fbm = oif_fbm[cur_oif_id];
+                int nexthop_bp = m_topology->NodeidToBP(nxt_hop_id);
+                uint32_t bfer_id = src_id;
+                uint32_t oifidx = (int32_t)cur_oif_id;
+                // uint32_t bfer_addr = dst_node->GetObject<Ipv4>()->GetAddress(j, 0).GetLocal().Get();
+                uint32_t bfer_addr = dst_node->GetObject<Ipv4>()->GetAddress(0, 0).GetLocal().Get(); //default to zero
+                uint32_t nxthop_addr = m_nodes.Get(nxt_hop_id)->GetObject<Ipv4>()->GetAddress(nxt_iif_id, 0).GetLocal().Get();
+                //add BIERTableEntry
+                m_arbiters[src_id]->AddBIERRoute(bfer_bp, fbm, nexthop_bp, bfer_id, oifidx, bfer_addr, nxthop_addr);
+            }
+
+            //del oif_fbm
+            for (int j = 0; j < num_oif; ++j) {
+                delete oif_fbm[j]; //delete
+            }
+        }
+    }
+
     void ArbiterSatMulticastHelper::InitialGlobalRoutingState() {
         //unicast
         InitialEmptyForwardingState();
 
         //multicast
         InitialEmptyMulticastState();
+
+        //bier
+        InitialEmptyBIERState();
     }
 
     void ArbiterSatMulticastHelper::UpdateGlobalRoutingState(int64_t t) {
@@ -160,6 +236,11 @@ namespace ns3 {
         //multicast update
         UpdateMulticastState(t);
         std::cout << "    > Multicast state update completed for t=" << t << std::endl;
+
+        if (USE_BIER) {
+            UpdateBIERState(t);
+            std::cout << "    > BIER state update completed for t=" << t << std::endl;
+        }
 
         //timer
         if (!parse_boolean(m_basicSimulation->GetConfigParamOrDefault("satellite_network_force_static", "false"))) {

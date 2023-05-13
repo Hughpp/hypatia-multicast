@@ -56,12 +56,15 @@ public:
     // std::string StringReprOfForwardingState();
 
     //bier
-    uint32_t GetBpFromNodeID(uint32_t node_id);
+    // uint32_t GetBpFromNodeID(uint32_t node_id);
+    BIERTableEntry& LookupBIERTable(int bp);
+    void ClearBIERRoutes();
+    void AddBIERRoute(int bfer_bp, uint32_t fbm[BS_LEN_32], int nexthop_bp, uint32_t bfer_id, uint32_t oifidx, uint32_t bfer_addr, uint32_t nxthop_addr);
 
 private:
     std::list<Ipv4MulticastRoutingTableEntry *> m_multicast_routes;
     std::list<BIERTableEntry *> m_bier_table;
-    std::map<uint32_t, uint32_t> m_node_id_to_bp;
+    // std::map<uint32_t, uint32_t> m_node_id_to_bp;
 };
 
 }

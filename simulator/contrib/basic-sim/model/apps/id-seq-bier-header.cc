@@ -156,27 +156,39 @@ IdSeqBIERHeader::Deserialize (Buffer::Iterator start)
   return GetSerializedSize ();
 }
 
-BIERTableEntry::BIERTableEntry(uint32_t bfer_id, uint32_t node_id, uint32_t fbm[BS_LEN_32], uint32_t nexthop) {
-    m_bfer_id = bfer_id;
-    m_node_id = node_id;
+BIERTableEntry::BIERTableEntry(int bfer_bp, uint32_t fbm[BS_LEN_32], int nexthop_bp, uint32_t bfer_id, uint32_t oifidx, uint32_t bfer_addr, uint32_t nxthop_addr) {
+    m_bfer_bp = bfer_bp;
     for (int i = 0; i < BS_LEN_32; ++i) m_fbm[i] = fbm[i];
-    m_nexthop = nexthop;
+    m_nexthop_bp = nexthop_bp;
+    // extra info
+    m_bfer_id = bfer_id;
+    m_oifidx = oifidx;
+    m_bfer_addr = bfer_addr;
+    m_nxthop_addr = nxthop_addr;
 }
 
-uint32_t BIERTableEntry::GetBFERid() {
+int BIERTableEntry::GetBFERBP() {
+  return m_bfer_bp;
+}
+
+uint32_t BIERTableEntry::GetBFERId() {
   return m_bfer_id;
-}
-
-uint32_t BIERTableEntry::GetNodeid() {
-  return m_node_id;
 }
 
 uint32_t* BIERTableEntry::GetFbm(){
     return m_fbm;
 }
 
-uint32_t BIERTableEntry::GetNexthop(){
-    return m_nexthop;
+int BIERTableEntry::GetNexthopBP(){
+    return m_nexthop_bp;
+}
+
+uint32_t BIERTableEntry::GetOifIdx(){
+    return m_oifidx;
+}
+
+uint32_t BIERTableEntry::GetNexthopAddr(){
+    return m_nxthop_addr;
 }
 
 void BIERTableEntry::BitwiseAndWith(uint32_t tarbs[BS_LEN_32]){
@@ -240,10 +252,18 @@ int BSFindLeastActive(uint32_t bs[BS_LEN_32]) {
   for (int i = 0; i < BS_LEN_32; ++i) {
       uint32_t bs_part = bs[i]; //get bs part
       if (bs_part > 0) {
-        return ffs((int)bs_part)-1;
+        return i * 32 + ffs((int)bs_part) - 1;
       }
   }
   return -1; //failed
+}
+
+void BSPrint(uint32_t tar[BS_LEN_32]) {
+  std::cout << " BS print: ";
+  for (int i = 0; i < BS_LEN_32; ++i) {
+    std::cout << tar[i] << " ";
+  }
+  std::cout << std::endl;
 }
 
 }

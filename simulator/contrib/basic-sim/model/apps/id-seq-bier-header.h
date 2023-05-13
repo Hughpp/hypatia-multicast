@@ -63,20 +63,28 @@ private:
 
 class BIERTableEntry
 {
+  // BP: int
+  // node_id: uint32_t
+  // BS part: uint32_t
 public:
-    BIERTableEntry(uint32_t bfer_id, uint32_t node_id, uint32_t fbm[BS_LEN_32], uint32_t nexthop);
-    uint32_t GetBFERid();
-    uint32_t GetNodeid();
+    BIERTableEntry(int bfer_bp, uint32_t fbm[BS_LEN_32], int nexthop_bp, uint32_t bfer_id, uint32_t oifidx, uint32_t bfer_addr, uint32_t nxthop_addr);
+    int GetBFERBP();
+    uint32_t GetBFERId();
     uint32_t* GetFbm();
-    uint32_t GetNexthop();
+    int GetNexthopBP();
+    uint32_t GetOifIdx();
+    uint32_t GetNexthopAddr();
     void BitwiseAndWith(uint32_t tarbs[BS_LEN_32]);
 
 private:
-    uint32_t m_bfer_id;
-    uint32_t m_node_id;
+    int m_bfer_bp;
     uint32_t m_fbm[BS_LEN_32];
-    uint32_t m_nexthop;
-
+    int m_nexthop_bp;
+    // extra info
+    uint32_t m_bfer_id;
+    uint32_t m_oifidx;
+    uint32_t m_bfer_addr; //useless
+    uint32_t m_nxthop_addr;
 };
 
 } // namespace ns3
@@ -90,6 +98,7 @@ void BSAnd(uint32_t res[BS_LEN_32], uint32_t a[BS_LEN_32], uint32_t b[BS_LEN_32]
 void BSXor(uint32_t res[BS_LEN_32], uint32_t a[BS_LEN_32], uint32_t b[BS_LEN_32]);
 bool BSEqualZero(uint32_t bs[BS_LEN_32]);
 int BSFindLeastActive(uint32_t bs[BS_LEN_32]);
+void BSPrint(uint32_t tar[BS_LEN_32]);
 
 } // namespace bsOpera
 

@@ -119,7 +119,11 @@ public:
      * @return String representation
      */
     virtual std::string StringReprOfForwardingState() = 0;
+
+    //BIER
     virtual uint32_t GetBpFromNodeID(uint32_t node_id);
+    virtual BIERTableEntry& LookupBIERTable(int bp);
+
 
 protected:
     int32_t m_node_id;
