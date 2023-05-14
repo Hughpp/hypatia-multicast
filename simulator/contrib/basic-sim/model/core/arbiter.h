@@ -123,6 +123,7 @@ public:
     //BIER
     virtual uint32_t GetBpFromNodeID(uint32_t node_id);
     virtual BIERTableEntry& LookupBIERTable(int bp);
+    virtual int GetBP();
 
 
 protected:

@@ -109,6 +109,7 @@ BIERTableEntry& ArbiterSatMulticast::LookupBIERTable(int bp) {
             return *route;
         }
     }
+    std::cout << "The bp not found: " << bp << std::endl;
     throw std::runtime_error("ArbiterSatMulticast::BIER table lookup failed");
 }
 

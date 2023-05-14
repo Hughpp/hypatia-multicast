@@ -109,6 +109,10 @@ BIERTableEntry& Arbiter::LookupBIERTable(int bp) {
     throw std::runtime_error("BIER not supported in this arbiter");
 }
 
+int Arbiter::GetBP() {
+    throw std::runtime_error("BIER not supported in this arbiter");
+}
+
 ArbiterResult Arbiter::BaseDecide(Ptr<const Packet> pkt, Ipv4Header const &ipHeader) {
     //handle src
     // Retrieve the source node id

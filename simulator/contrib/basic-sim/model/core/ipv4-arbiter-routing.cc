@@ -22,7 +22,7 @@
   if (m_ipv4 && m_ipv4->GetObject<Node> ()) { \
       std::clog << Simulator::Now ().GetSeconds () \
                 << " [node " << m_ipv4->GetObject<Node> ()->GetId () << "] "; }
-#define ROUTING_PRINT false
+#define ROUTING_PRINT true
 
 #include <iomanip>
 #include "ns3/log.h"
@@ -422,11 +422,12 @@ namespace ns3 {
         packetCopy->RemoveHeader(udpheader);
         packetCopy->RemoveHeader(isbheader);
         //check current node
-        //local delivery unused because satellites are seen as BFRs only (not BFER, only ground stations are BFERs)
-        // std::cout << "self BP: " << m_bp << std::endl;
+        //local delivery check is necessary: only for BFERs (i.e., ground stations)
+        if (ROUTING_PRINT) std::cout << "self BP: " << m_bp << std::endl;
         if (m_bp >= 0 && isbheader.TestBP(m_bp)) {//local delivery
             lcb (p, ipHeader, iif);
             isbheader.SetBP(m_bp, 0); //set to zero
+            return true; //forwarding after lcb is impossible
         }
 
         //check other dst
@@ -435,8 +436,10 @@ namespace ns3 {
         bsOpera::BScopy(bs, header_bs);
         int ports_limit = 0;
         while (!bsOpera::BSEqualZero(bs)) {
-            // std::cout << "Before and" << std::endl;
-            // bsOpera::BSPrint(bs);
+            if (ROUTING_PRINT) {
+                std::cout << "Before and" << std::endl;
+                bsOpera::BSPrint(bs);
+            }
             ++ports_limit;
             if (ports_limit > 200) {
                 throw std::runtime_error("BIER BS resolve at a router exceeds the upper bound 200 times");
@@ -447,15 +450,19 @@ namespace ns3 {
             uint32_t* fbm = bier_entry.GetFbm();
             //proc bs
             bsOpera::BSAnd(bs_toforward, fbm, bs);
-            // std::cout << "After and" << std::endl;
-            // bsOpera::BSPrint(bs_toforward);
-            // bsOpera::BSPrint(fbm);
-            // bsOpera::BSPrint(bs);
+            if (ROUTING_PRINT) {
+                std::cout << "After and: bs_toforward/fbm/bs" << std::endl;
+                bsOpera::BSPrint(bs_toforward);
+                bsOpera::BSPrint(fbm);
+                bsOpera::BSPrint(bs);
+            }
             bsOpera::BSXor(bs, bs_toforward, bs);
-            // std::cout << "After xor" << std::endl;
-            // bsOpera::BSPrint(bs_toforward);
-            // bsOpera::BSPrint(fbm);
-            // bsOpera::BSPrint(bs);
+            if (ROUTING_PRINT) {
+                std::cout << "After xor: bs_toforward/fbm/bs" << std::endl;
+                bsOpera::BSPrint(bs_toforward);
+                bsOpera::BSPrint(fbm);
+                bsOpera::BSPrint(bs);
+            }  
             //construct pkt
             isbheader.SetBS(bs_toforward);
             Ptr<Packet> tmp = packetCopy->Copy();
@@ -472,10 +479,14 @@ namespace ns3 {
             rtentry->SetOutputDevice(m_ipv4->GetNetDevice(if_idx));
             //forward
             ucb(rtentry, tmp, ipHeader);
-
-            // std::cout << "One iter ends" << std::endl;
-            // bsOpera::BSPrint(bs);
+            if (ROUTING_PRINT) {
+                std::cout << "One iter ends, send to oif: " << bier_entry.GetOifIdx() << std::endl;
+                bsOpera::BSPrint(bs);
+            }     
         }
+        if (ROUTING_PRINT) {
+            std::cout << std::endl << std::endl;
+        }     
         std::cout << "      >   proc at node " << m_nodeId << std::endl;
         return true;
     }
