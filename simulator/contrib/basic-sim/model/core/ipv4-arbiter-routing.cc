@@ -485,9 +485,9 @@ namespace ns3 {
             }     
         }
         if (ROUTING_PRINT) {
+            std::cout << "      >   proc finished at node " << m_nodeId << std::endl;
             std::cout << std::endl << std::endl;
         }     
-        std::cout << "      >   proc at node " << m_nodeId << std::endl;
         return true;
     }
 

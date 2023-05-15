@@ -1,0 +1,2 @@
+UDP burst ID    From      MemNum    Target rate         Start time      Duration        Outgoing rate (w/ headers)  Outgoing rate (payload)     Packets sent    Data sent (w/headers)       Data sent (payload)         Metadata
+0               1174      2         10.00 Mbit/s        0.00 ms         0.04 ms         300.00 Mbit/s               294.40 Mbit/s               1               0.01 Mbit                   0.01 Mbit                   

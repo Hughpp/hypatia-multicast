@@ -87,6 +87,8 @@ protected:
   MacToNetDevice m_link;
   std::vector<Ptr<GSLNetDevice>> m_net_devices;
 
+  //real L2 multicast: need to record map from multicast address to netdev, not only m_link emulation
+
 };
 
 } // namespace ns3
