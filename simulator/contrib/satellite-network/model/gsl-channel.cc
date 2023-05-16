@@ -72,18 +72,51 @@ GSLChannel::TransmitStart (
   NS_LOG_LOGIC ("UID is " << p->GetUid () << ")");
 
   Mac48Address address48 = Mac48Address::ConvertFrom (dst_address);
-  MacToNetDeviceI it = m_link.find (address48);
-  std::cout << "    transmitStart dst_mac=" << address48 << "  src_node=" << src->GetNode()->GetId();
-  if (it != m_link.end ()) {
-    Ptr<GSLNetDevice> dst = it->second;
-    std::cout << " ->  dst_node=" << dst->GetNode()->GetId() << " dst_mac=" << dst->GetAddress() << std::endl;
-    bool sameSystem = (src->GetNode()->GetSystemId() == dst->GetNode()->GetSystemId());
-    return TransmitTo(p, src, it->second, txTime, sameSystem);
+  //distinguish between unicast and multicast
+  if (address48.IsGroup()) { //is multicast addr
+    MacToMultiNetDeviceI it = m_link_multicast.find(address48);
+    // std::cout << "    transmitStart multicast dst_mac=" << address48 << "  src_node=" << src->GetNode()->GetId();
+    if (it != m_link_multicast.end()) {
+      std::list<Ptr<GSLNetDevice>> dst_list = it->second;
+      for (auto dst: dst_list) {
+        // std::cout << " ->  dst_node=" << dst->GetNode()->GetId() << " dst_mac=" << dst->GetAddress() << std::endl;
+        bool sameSystem = (src->GetNode()->GetSystemId() == dst->GetNode()->GetSystemId());
+        if (!TransmitTo(p->Copy(), src, dst, txTime, sameSystem)) {
+          return false;
+        } 
+      }
+      return true;
+    }
+    std::cout << " -> Multicast Mac Not Found! " << address48 << std::endl;
+    NS_ABORT_MSG("Multicast MAC address could not be mapped to a network device.");
+    return false;
   }
+  else {
+    MacToNetDeviceI it = m_link.find (address48);
+    // std::cout << "    transmitStart non-multicast dst_mac=" << address48 << "  src_node=" << src->GetNode()->GetId();
+    if (it != m_link.end ()) {
+      Ptr<GSLNetDevice> dst = it->second;
+      // std::cout << " ->  dst_node=" << dst->GetNode()->GetId() << " dst_mac=" << dst->GetAddress() << std::endl;
+      bool sameSystem = (src->GetNode()->GetSystemId() == dst->GetNode()->GetSystemId());
+      return TransmitTo(p, src, it->second, txTime, sameSystem);
+    }
 
-  std::cout << " -> Not Found!" << std::endl;
-  NS_ABORT_MSG("MAC address could not be mapped to a network device.");
-  return false;
+    std::cout << " -> Not Found!" << address48 << std::endl;
+    NS_ABORT_MSG("MAC address could not be mapped to a network device.");
+    return false;
+  }
+  // MacToNetDeviceI it = m_link.find (address48);
+  // std::cout << "    transmitStart dst_mac=" << address48 << "  src_node=" << src->GetNode()->GetId();
+  // if (it != m_link.end ()) {
+  //   Ptr<GSLNetDevice> dst = it->second;
+  //   std::cout << " ->  dst_node=" << dst->GetNode()->GetId() << " dst_mac=" << dst->GetAddress() << std::endl;
+  //   bool sameSystem = (src->GetNode()->GetSystemId() == dst->GetNode()->GetSystemId());
+  //   return TransmitTo(p, src, it->second, txTime, sameSystem);
+  // }
+
+  // std::cout << " -> Not Found!" << std::endl;
+  // NS_ABORT_MSG("MAC address could not be mapped to a network device.");
+  // return false;
 }
 
 bool
@@ -179,18 +212,35 @@ GSLChannel::GetDevice (std::size_t i) const
 
 void 
 GSLChannel::SetLogicLink(Mac48Address tarMac, Ptr<GSLNetDevice> tarDev) {
-  std::cout << "            SetLogicLink:start" << std::endl;
-  // for(auto entry: m_link) {
-  //   std::cout << "            mac" << entry.first << std::endl;
-  // }
-  m_link[tarMac] = tarDev;
-  std::cout << "            SetLogicLink:finished" << std::endl;
+  // old bug version
+  // std::cout << "            GSLChannel::SetLogicLink: SetLogicLink:start" << std::endl;
+  // m_link[tarMac] = tarDev;
+  // std::cout << "            tarMac:" << tarMac << std::endl;
+  // std::cout << "            GSLChannel::SetLogicLink: SetLogicLink:finished" << std::endl;
+
+  //new l2-multicast debug
+  MacToMultiNetDeviceI it = m_link_multicast.find (tarMac);
+  if (it != m_link_multicast.end()) {
+    //already exist: push a mac
+    m_link_multicast[tarMac].push_back(tarDev);
+  }
+  else { //not exist: new a list
+    std::list<Ptr<GSLNetDevice>> devlist = {tarDev};
+    m_link_multicast[tarMac] = devlist;
+  }
 }
 
 void
 GSLChannel::DelLogicLink(Mac48Address tarMac) {
   // std::cout << "********************************************channel del logic link: " << tarMac << std::endl;
-  m_link.erase(tarMac);
+  // m_link.erase(tarMac);
+
+  //new l2-multicast debug
+  MacToMultiNetDeviceI it = m_link_multicast.find (tarMac);
+  if (it != m_link_multicast.end()) {
+    it->second.clear(); //clear list
+  }
+  m_link_multicast.erase(tarMac);
 }
 
 } // namespace ns3

@@ -214,7 +214,7 @@ namespace ns3 {
             m_socket->SendTo(p, 0, std::get<1>(m_outgoing_bursts[internal_burst_idx]));
         }
         else { //BIER pkt construct
-            std::cout << "BIER pkt construct" << std::endl;
+            if (ROUTING_PRINT) std::cout << "BIER pkt construct at " << m_node->GetId() << std::endl;
             IdSeqBIERHeader idSeq;
             idSeq.SetId(std::get<0>(m_outgoing_bursts[internal_burst_idx]).GetUdpBurstId());
             idSeq.SetSeq(m_outgoing_bursts_packets_sent_counter[internal_burst_idx]);
@@ -286,7 +286,7 @@ namespace ns3 {
         Ptr <Packet> packet;
         Address from;
         while ((packet = socket->RecvFrom(from))) {
-            std::cout << "[App-Recv]Multicast App socket recv a pkt at node " << m_node->GetId() << " from " << from << std::endl;
+            if (ROUTING_PRINT) std::cout << "[App-Recv]Multicast App socket recv a pkt at node " << m_node->GetId() << " from " << from << std::endl;
             // Extract burst identifier and packet sequence number
             IdSeqHeader incomingIdSeq;
             packet->RemoveHeader (incomingIdSeq);

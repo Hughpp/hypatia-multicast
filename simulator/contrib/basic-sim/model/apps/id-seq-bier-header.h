@@ -24,8 +24,8 @@
 #ifndef ID_SEQ_BIER_HEADER_H
 #define ID_SEQ_BIER_HEADER_H
 #define BS_LEN_32 4 
-#define USE_BIER true
-// #define USE_BIER false
+#define USE_BIER false
+#define ROUTING_PRINT false
 //32 bit as a unit
 
 #include "ns3/header.h"

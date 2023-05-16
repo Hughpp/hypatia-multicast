@@ -503,17 +503,22 @@ GSLNetDevice::GetMulticast (Ipv4Address multicastGroup) const
 {
   NS_LOG_FUNCTION (this << multicastGroup);
   Mac48Address multicast = Mac48Address::GetMulticast (multicastGroup);
-  //new map method for simple multicast
   uint8_t etherBuffer[6];
+  uint8_t ipBuffer[4];
   multicast.CopyTo(etherBuffer);
-  //0-1:node id
   uint32_t node_id = m_node->GetId();
-  etherBuffer[0] = (etherBuffer[0] + node_id/256);
-  etherBuffer[1] = (etherBuffer[1] + node_id%256);
-  //2:if id
-  etherBuffer[2] = (etherBuffer[2] + m_ifIndex);
+  //1-2:transfer from group addr
+  multicastGroup.Serialize (ipBuffer);
+  // etherBuffer[3] |= ipBuffer[1] & 0x7f;
+  etherBuffer[1] = ipBuffer[2];
+  etherBuffer[2] = ipBuffer[3];
+  //3-4:node id
+  etherBuffer[3] += (node_id/256);
+  etherBuffer[4] += (node_id%256);
+  //5:if id
+  etherBuffer[1] += (m_ifIndex);
   multicast.CopyFrom(etherBuffer);
-  std::cout << "    > Cal multicast logic mac: group=" << multicastGroup << " node_id=" << node_id << "   if_id=" << m_ifIndex << "   mac=" << multicast << std::endl;
+  // std::cout << "    > GSLNetDevice::GetMulticast: Cal multicast logic mac: group=" << multicastGroup << " node_id=" << node_id << "   if_id=" << m_ifIndex << "   mac=" << multicast << std::endl;
   return multicast;
 }
 
@@ -523,6 +528,7 @@ GSLNetDevice::GetMulticast (Ipv6Address addr) const
   // NS_LOG_FUNCTION (this << addr);
   // return Mac48Address ("33:33:00:00:00:00");
   NS_LOG_FUNCTION (this << addr);
+  throw std::runtime_error("GSLNetDevice::GetMulticast Ipv6 is not supported");
   return Mac48Address::GetMulticast (addr);
 }
 

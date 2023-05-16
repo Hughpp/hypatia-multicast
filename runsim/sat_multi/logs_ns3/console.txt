@@ -1,24 +1,10 @@
 Waf: Entering directory `/home/lul/exp/tdyth/learns3/ns3-sat-sim/simulator/build/optimized'
-[1960/2084] Compiling contrib/basic-sim/model/core/ipv4-arbiter-routing.cc
-[2029/2084] Linking build/optimized/lib/libns3.31-basic-sim-optimized.so
-[2030/2084] Linking build/optimized/lib/libns3.31-satellite-network-optimized.so
-[2031/2084] Linking build/optimized/contrib/basic-sim/main/ns3.31-basic-sim-main-full-optimized
-[2032/2084] Linking build/optimized/scratch/main_satnet/main_satnet
-[2033/2084] Linking build/optimized/scratch/basicflow/basicflow
-[2034/2084] Linking build/optimized/scratch/mymulticast/mymulticast
-[2035/2084] Linking build/optimized/scratch/simplerouting/simplerouting
-[2036/2084] Linking build/optimized/scratch/scratch-simulator
-[2037/2084] Linking build/optimized/scratch/udp_test/udp_test
-[2038/2084] Linking build/optimized/scratch/basicping/basicping
-[2039/2084] Linking build/optimized/scratch/subdir/subdir
-[2040/2084] Linking build/optimized/scratch/myfirst/myfirst
-[2041/2084] Linking build/optimized/scratch/basic_main/basic_main
 Waf: Leaving directory `/home/lul/exp/tdyth/learns3/ns3-sat-sim/simulator/build/optimized'
 Build commands will be stored in build/optimized/compile_commands.json
-'build' finished successfully (5.368s)
+'build' finished successfully (0.671s)
 BASIC SIMULATION START
   > Date... Monday May 15, 2023
-  > Time... 09:46:09
+  > Time... 10:19:29
 
 CONFIGURE RUN DIRECTORY
   > Run directory: ../runsim/sat_multi
@@ -478,7 +464,7 @@ self BP: 94
   > Calculating BIER route from m_globalForwardingState
     > BIER state update completed for t=4000000000
 Finished simulation.
-Simulation of 5.0 seconds took in wallclock time 0.2 seconds.
+Simulation of 5.0 seconds took in wallclock time 0.1 seconds.
 
 STORE TCP FLOW RESULTS
   > Not enabled, so no TCP flow results are written
@@ -514,19 +500,19 @@ TIMING RESULTS
 [    0.0 -     0.0] (0.0 s) :: Configure run and logs directory
 [    0.0 -     0.0] (0.0 s) :: Configure simulator
 [    0.0 -     0.0] (0.0 s) :: Setup TCP parameters
-[    0.0 -     0.5] (0.5 s) :: Set first GSL interface bandwidth
-[    0.5 -     0.5] (0.0 s) :: Read Multicast UDP schedule
-[    0.5 -     0.5] (0.0 s) :: Remove previous Multicast UDP log files
-[    0.5 -     0.5] (0.0 s) :: Setup Multicast UDP applications
-[    0.5 -     0.5] (0.0 s) :: Create initial routing state
-[    0.5 -     2.2] (1.7 s) :: Setup sat-multicast-arbiter on each node
-[    2.2 -     2.6] (0.4 s) :: Create initial single forwarding state
-[    2.6 -     2.6] (0.0 s) :: Whatever is between previous timestamp and the simulation run
-[    2.6 -     2.7] (0.2 s) :: Run simulation
-[    2.7 -     2.7] (0.0 s) :: Write Multicast UDP log files
-[    2.7 -     2.7] (0.0 s) :: Destroy simulator
+[    0.0 -     0.4] (0.4 s) :: Set first GSL interface bandwidth
+[    0.4 -     0.4] (0.0 s) :: Read Multicast UDP schedule
+[    0.4 -     0.4] (0.0 s) :: Remove previous Multicast UDP log files
+[    0.4 -     0.4] (0.0 s) :: Setup Multicast UDP applications
+[    0.4 -     0.4] (0.0 s) :: Create initial routing state
+[    0.4 -     2.2] (1.7 s) :: Setup sat-multicast-arbiter on each node
+[    2.2 -     2.3] (0.1 s) :: Create initial single forwarding state
+[    2.3 -     2.3] (0.0 s) :: Whatever is between previous timestamp and the simulation run
+[    2.3 -     2.4] (0.1 s) :: Run simulation
+[    2.4 -     2.4] (0.0 s) :: Write Multicast UDP log files
+[    2.4 -     2.5] (0.0 s) :: Destroy simulator
 
 BASIC SIMULATION END
   > Date... Monday May 15, 2023
-  > Time... 09:46:12
+  > Time... 10:19:31
 

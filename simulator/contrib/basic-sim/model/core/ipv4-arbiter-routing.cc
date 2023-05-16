@@ -22,7 +22,7 @@
   if (m_ipv4 && m_ipv4->GetObject<Node> ()) { \
       std::clog << Simulator::Now ().GetSeconds () \
                 << " [node " << m_ipv4->GetObject<Node> ()->GetId () << "] "; }
-#define ROUTING_PRINT true
+// #define ROUTING_PRINT true
 
 #include <iomanip>
 #include "ns3/log.h"

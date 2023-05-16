@@ -94,7 +94,7 @@ ArbiterResult ArbiterSatMulticast::DecideMulticast(int32_t source_node_id, Ptr<c
             }
         }
     }
-    std::cout << "    ArbiterSatMulticast at node " << m_node_id << ": not found multicast route for forwarding" << std::endl;
+    if (ROUTING_PRINT) std::cout << "    ArbiterSatMulticast at node " << m_node_id << ": not found multicast route for forwarding" << std::endl;
     return ArbiterResult(true, 0, 0);
 }
 

@@ -87,7 +87,10 @@ protected:
   MacToNetDevice m_link;
   std::vector<Ptr<GSLNetDevice>> m_net_devices;
 
-  //real L2 multicast: need to record map from multicast address to netdev, not only m_link emulation
+  //simple L2 multicast: need to record map from multicast address to netdev, not only m_link emulation
+  typedef sgi::hash_map<Mac48Address, std::list<Ptr<GSLNetDevice>>, Mac48AddressHash> MacToMultiNetDevice;
+  typedef sgi::hash_map<Mac48Address, std::list<Ptr<GSLNetDevice>>, Mac48AddressHash>::iterator MacToMultiNetDeviceI;
+  MacToMultiNetDevice m_link_multicast; //different from unicast, multicast may transmit to multiple netdevs
 
 };
 

@@ -139,7 +139,7 @@ namespace ns3 {
         //acturally del the out-dated mac
         for (auto oldMac: multicastMacsToDel) { //mac
             //del after 10ms
-            Simulator::Schedule(NanoSeconds(t+10000000), &GSLChannel::DelLogicLink, m_topology->m_gslChannel, oldMac); //delayed del mac
+            Simulator::Schedule(NanoSeconds(t+m_dynamicStateUpdateIntervalNs), &GSLChannel::DelLogicLink, m_topology->m_gslChannel, oldMac); //delayed del mac
             // m_topology->m_gslChannel->DelLogicLink(oldMac);
         }
     }

@@ -1,14 +1,14 @@
-Configure run and logs directory,88039
-Configure simulator,210747
-Setup TCP parameters,135641
-Set first GSL interface bandwidth,458027104
-Read Multicast UDP schedule,128469
-Remove previous Multicast UDP log files,36112
-Setup Multicast UDP applications,895613
-Create initial routing state,15851713
-Setup sat-multicast-arbiter on each node,1697148876
-Create initial single forwarding state,395538733
-Whatever is between previous timestamp and the simulation run,12375
-Run simulation,157162668
-Write Multicast UDP log files,253162
-Destroy simulator,19580098
+Configure run and logs directory,78576
+Configure simulator,243052
+Setup TCP parameters,204526
+Set first GSL interface bandwidth,416517117
+Read Multicast UDP schedule,151248
+Remove previous Multicast UDP log files,116143
+Setup Multicast UDP applications,798308
+Create initial routing state,16237810
+Setup sat-multicast-arbiter on each node,1723160817
+Create initial single forwarding state,144030903
+Whatever is between previous timestamp and the simulation run,13538
+Run simulation,135947906
+Write Multicast UDP log files,232349
+Destroy simulator,20239995
