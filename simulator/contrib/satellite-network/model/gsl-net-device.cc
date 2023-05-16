@@ -516,7 +516,7 @@ GSLNetDevice::GetMulticast (Ipv4Address multicastGroup) const
   etherBuffer[3] += (node_id/256);
   etherBuffer[4] += (node_id%256);
   //5:if id
-  etherBuffer[1] += (m_ifIndex);
+  etherBuffer[5] += (m_ifIndex);
   multicast.CopyFrom(etherBuffer);
   // std::cout << "    > GSLNetDevice::GetMulticast: Cal multicast logic mac: group=" << multicastGroup << " node_id=" << node_id << "   if_id=" << m_ifIndex << "   mac=" << multicast << std::endl;
   return multicast;

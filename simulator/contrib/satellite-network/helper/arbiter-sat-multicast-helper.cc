@@ -60,7 +60,7 @@ namespace ns3 {
         std::cout << "  > Calculating multicast route from m_globalForwardingState" << std::endl;
         for (MulticastUdpInfo req : m_multicast_reqs) {
             //check time
-            if (req.GetStartTimeNs() > t+m_dynamicStateUpdateIntervalNs || req.GetStartTimeNs()+req.GetDurationNs() < t) {
+            if (req.GetStartTimeNs() >= t+m_dynamicStateUpdateIntervalNs || req.GetStartTimeNs()+req.GetDurationNs() <= t) {
                 continue;
             }
             //cal oifs for every node separately
@@ -84,7 +84,10 @@ namespace ns3 {
                     nodes_ids_to_install.insert(cur_node_id);
                     //src single nexthop check
                     if (cur_node_id == src_id){
-                        if (nxthop_of_src != -1 && nxthop_of_src != nxt_node_id) throw std::runtime_error("MulticastRoutingHelper: Src oif num != 1(not supported by ns3 routing protocol)");
+                        if (nxthop_of_src != -1 && nxthop_of_src != nxt_node_id) {
+                            std::cout << "ArbiterSatMulticastHelper::UpdateMulticastState:req error id: " << req.GetUdpBurstId() << std::endl;
+                            throw std::runtime_error("MulticastRoutingHelper: Src oif num != 1(not supported by ns3 routing protocol)");
+                        }
                         nxthop_of_src = (int64_t)nxt_node_id;
                     }
                     // std::cout << "  ******* src_id=" << src_id << " dst_id=" << dst_id << " cur_node=" << cur_node_id << "-oif=" << cur_oif_id << " nxthop_id=" << nxt_node_id << "-iif=" << nxt_iif_id << std::endl;
@@ -138,8 +141,7 @@ namespace ns3 {
 
         //acturally del the out-dated mac
         for (auto oldMac: multicastMacsToDel) { //mac
-            //del after 10ms
-            Simulator::Schedule(NanoSeconds(t+m_dynamicStateUpdateIntervalNs), &GSLChannel::DelLogicLink, m_topology->m_gslChannel, oldMac); //delayed del mac
+            Simulator::Schedule(NanoSeconds(t+10000000), &GSLChannel::DelLogicLink, m_topology->m_gslChannel, oldMac); //delayed del mac
             // m_topology->m_gslChannel->DelLogicLink(oldMac);
         }
     }

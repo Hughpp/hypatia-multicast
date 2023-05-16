@@ -3,10 +3,8 @@ import numpy as np
 import random
 import typing
 from copy import deepcopy
-
 '''
 生成多播需求+处理输出结果，最后生成需求文件multicast_schedule.csv
-生成的多播需求需要处理，是因为ns3框架限制，多播下src处也只允许一个出端口，因此需要对需求在src处按照端口做分割
 '''
 
 N_SAT = 1156 # 卫星数量 kuiper(1156)
@@ -157,11 +155,17 @@ def req_split_atsrc(reqs:typing.List[Mreq], fstate_dir): #对需求按src的端�
         return sp_reqs
 
     def req_fork_time(req:Mreq, time_ns):
-        '''将req从time处切为前后两个，return新的req，修改原req的time_start和time_dura'''
-        assert(req.time_start < time_ns < req.time_start + req.time_dura)
+        '''
+        将req从time处切为前后两个，return新的req，修改原req的time_start和time_dura
+                start       dura
+        原req： time_ns+1   t_end-time_ns
+        newreq：t_start     time_ns-t_start
+        '''
+        assert(req.time_start < time_ns <= req.time_start + req.time_dura)
         reqnew = Mreq(src=req.src, dsts=req.dsts.copy(), rate=req.rate, t_start=req.time_start, t_dura=time_ns-req.time_start)
         req.set_timedura(req.time_start+req.time_dura-time_ns) #这里set的前后顺序不能变
-        req.set_timestart(time_ns+1) # must+1
+        req.set_timestart(time_ns) # must+1
+        # req.set_timestart(time_ns+1) # must+1
         return reqnew
 
     #读取fstate
@@ -172,19 +176,19 @@ def req_split_atsrc(reqs:typing.List[Mreq], fstate_dir): #对需求按src的端�
 
     req_forked = []
     fstate_pre = load_fstate(dir=fstate_dir, t=0, fstate_pre=None)
-    for tright_ms in range(time_interval, total_dura+1, time_interval):
+    for tright_ms in range(time_interval, total_dura+1, time_interval): #时间轴右边界
         tright_ns = tright_ms*1e6
         time_interval_ns = time_interval * 1e6
-        fstate = load_fstate(dir=fstate_dir, t=tright_ms, fstate_pre=deepcopy(fstate_pre))
+        fstate = load_fstate(dir=fstate_dir, t=tright_ms, fstate_pre=deepcopy(fstate_pre)) #下一时刻路由
         for req in reqs:
-            if tright_ns - time_interval_ns <= req.time_start + req.time_dura <= tright_ns:
+            if tright_ns - time_interval_ns <= req.time_start + req.time_dura < tright_ns:
                 req_final = req_final + split_bydst_single_slot(req=req, fstate=fstate_pre)
-            if not req.time_start < tright_ns <= req.time_start+req.time_dura: #不需要管
+            if not req.time_start < tright_ns <= req.time_start+req.time_dura: #如果tright不在req时间范围内，不需要管
                 continue
-            if req.time_start < tright_ns < req.time_start+req.time_dura and \
+            if req.time_start < tright_ns <= req.time_start+req.time_dura and \
                 check_src_routing_changed(req, fstate_pre, fstate): #如果前后变化了,判断变化的前提是tright两侧都有需求
                 #拆分成前后两段
-                reqnew = req_fork_time(req, tright_ns)
+                reqnew = req_fork_time(req, tright_ns) #从tright_ns开始会采用新的route
                 req_forked.append(reqnew)
                 #fork出来的可以安全split
                 req_final = req_final + split_bydst_single_slot(req=reqnew, fstate=fstate_pre)
@@ -214,7 +218,7 @@ def reqs_to_csv(reqs:typing.List[Mreq], tar_filename):
 def main():
     # print('****** gen multicast reqs -random ******')
     # random gen
-    np.random.seed(77)
+    # np.random.seed(77)
     reqs = gen_rawreqs_random(num = 100)
     
     #static
@@ -234,42 +238,8 @@ def main():
         r.show()
 
     print("****** write file to csv ******")
-    tarfile = './multicast_schedule.csv'
+    tarfile = './multicast_test/multicast_schedule.csv'
     reqs_to_csv(reqs=reqfinal, tar_filename=tarfile)
-
-def cal_reqbs(reqs:typing.List[Mreq]):
-    #计算bs
-    #赋予bier标识
-    raise NotImplementedError
-
-def main_bier():
-    # print('****** gen multicast reqs -random ******')
-    # random gen
-    np.random.seed(77)
-    reqs = gen_rawreqs_random(num = 100)
-    
-    #static
-    # 0,1243,2,1161 1241,100,1018444738,814043676,,
-    # req = Mreq(src=1243, dsts=[1161,1241], rate=100, t_start=1018444738, t_dura=814043676)
-    # reqs = [req]
-
-    for req in reqs:
-        req.show()
-
-    print("****** multicast reqs pre proc ******")
-    fstate_dir = "../sat_state/kuiper_630_isls_plus_grid_ground_stations_top_100_algorithm_free_one_only_over_isls/dynamic_state_{}ms_for_200s".format(TIME_INTERVAL_MS)
-    reqfinal = req_split_atsrc(reqs, fstate_dir)
-    #为所有的reqs计算bs
-    cal_reqbs(reqfinal)
-
-    print("\n\n\nreqs after proc")
-    for r in reqfinal:
-        r.show()
-
-    print("****** write file to csv ******")
-    tarfile = './multicast_schedule_bier.csv'
-    reqs_to_csv(reqs=reqfinal, tar_filename=tarfile)
-
 
 if __name__ == '__main__':
     main()
